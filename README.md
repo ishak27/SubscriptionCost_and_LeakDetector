@@ -1,6 +1,6 @@
 # 💳 Subscription Overlap & Cost Leak Detector
 
-> 🚀 A backend application that helps users manage recurring subscriptions, identify overlapping services, and understand how much they are spending over time.
+🚀 A backend application that helps users manage recurring subscriptions, identify overlapping services, and understand how much they are spending over time.
 
 ---
 
