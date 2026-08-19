@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard — Cove</title>
+<link rel="stylesheet" href="css/dashboard.css" />
+</head>
+<body>
+    <!-- ============ REPORTS ============ -->
+    <section class="view" id="view-reports">
+      <div class="topbar">
+        <div>
+          <h1>Reports</h1>
+          <div class="date">Full category breakdown &amp; totals</div>
+        </div>
+      </div>
+      <div class="card panel">
+        <div class="panel-head"><div><h3>Category breakdown</h3><p>Monthly + annual totals per category</p></div></div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="reportTable">
+            <thead>
+              <tr><th>Category</th><th># Subs</th><th>Monthly</th><th>Annual</th><th>Status</th></tr>
+            </thead>
+            <tbody id="reportTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BUDGET PLANNER ============ -->
+    <section class="view" id="view-budget">
+      <div class="topbar">
+        <div>
+          <h1>Budget planner</h1>
+          <div class="date">Set a monthly cap and see how your subscriptions measure up</div>
+        </div>
+      </div>
+
+      <div class="card panel">
+        <div class="panel-head">
+          <div><h3>Your monthly budget</h3><p>Saved automatically, private to your account</p></div>
+        </div>
+        <form class="budget-form" id="budgetForm" novalidate>
+          <div class="field" id="budgetField">
+            <label for="budgetInput">Monthly budget</label>
+            <input type="number" id="budgetInput" placeholder="e.g. 2000" min="0" step="1" />
+          </div>
+          <button type="submit" class="btn btn-primary">Save budget</button>
+        </form>
+
+        <div id="budgetArea"></div>
+      </div>
+
+      <div class="card panel">
+        <div class="panel-head">
+          <div><h3>Budget by category</h3><p>How each category chips away at your cap</p></div>
+        </div>
+        <div id="budgetCategoryArea"></div>
+      </div>
+    </section>
+
+    <!-- ============ RENEWAL CALENDAR ============ -->
+    <section class="view" id="view-calendar">
+      <div class="topbar">
+        <div>
+          <h1>Renewal calendar</h1>
+          <div class="date">Every upcoming renewal, at a glance</div>
+        </div>
+      </div>
+
+      <div class="card panel">
+        <div class="calendar-head">
+          <button class="btn-icon" id="calPrevBtn" title="Previous month">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <h3 id="calMonthLabel">August 2026</h3>
+          <button class="btn-icon" id="calNextBtn" title="Next month">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+        <div class="calendar-weekdays">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="calendar-legend">
+          <span>🔴 Renewing very soon (≤3 days)</span>
+          <span>🟡 Coming up (≤10 days)</span>
+          <span>🟢 Later this month</span>
+        </div>
+      </div>
+
+      <div class="card panel">
+        <div class="panel-head"><div><h3>Next renewals</h3><p>Sorted soonest-first, across every category</p></div></div>
+        <div id="upcomingRenewalsArea"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <div class="foot-brand"><span class="dot"></span> Cove</div>
+    <div>Subscription overlap &amp; cost leak detector</div>
+    <div class="foot-links">
+      <a href="index.html">Back to homepage</a>
+    </div>
+  </footer>
+  </div>
+</div>
+
+<!-- Delete confirmation modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <h3>Remove this subscription?</h3>
+    <p id="deleteModalText">This can't be undone, but you can always add it again later.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" id="cancelDeleteBtn">Cancel</button>
+      <button class="btn btn-primary btn-sm" style="background:var(--leak);" id="confirmDeleteBtn">Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mock payment-confirmation modal (PIN → processing → success) -->
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal-box payment-modal-box">
+    <div class="payment-step" id="paymentStepPin">
+      <div class="payment-icon">🔐</div>
+      <h3>Confirm payment</h3>
+      <p id="paymentStepPinText">Enter your PIN to confirm this subscription.</p>
+      <input type="password" inputmode="numeric" maxlength="6" id="paymentPinInput" class="pin-input" placeholder="••••" />
+      <p class="error-msg" id="paymentPinError" style="display:none;">Enter a 4–6 digit PIN.</p>
+      <div class="modal-actions" style="justify-content:center;">
+        <button class="btn btn-ghost btn-sm" type="button" id="paymentCancelBtn">Cancel</button>
+        <button class="btn btn-primary btn-sm" type="button" id="paymentPayBtn">Pay now</button>
+      </div>
+    </div>
+    <div class="payment-step" id="paymentStepProcessing" style="display:none;">
+      <div class="payment-spinner"></div>
+      <h3>Processing payment…</h3>
+      <p>Confirming with your bank / UPI app.</p>
+    </div>
+    <div class="payment-step" id="paymentStepSuccess" style="display:none;">
+      <div class="payment-icon success">✅</div>
+      <h3>Payment successful!</h3>
+      <p id="paymentStepSuccessText">Paid successfully.</p>
+    </div>
+  </div>
+</div>
+
+<script src="utils.js"></script>
+<script src="auth.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
