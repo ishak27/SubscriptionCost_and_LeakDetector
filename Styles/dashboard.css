@@ -1,0 +1,144 @@
+
+/* ============================================================
+   Budget planner
+   ============================================================ */
+.budget-form{ display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom: 22px; }
+.budget-form .field{ margin-bottom:0; flex:1; min-width:180px; }
+.budget-progress-wrap{ margin-bottom: 8px; }
+.budget-progress-track{ height:16px; border-radius:999px; background: var(--sand); overflow:hidden; }
+.budget-progress-fill{ height:100%; border-radius:999px; background: linear-gradient(90deg, var(--teal), #3AB088); transition: width .8s cubic-bezier(.2,.8,.2,1), background .3s ease; width:0%; }
+.budget-progress-fill.warn{ background: linear-gradient(90deg, var(--gold), var(--coral)); }
+.budget-progress-fill.over{ background: linear-gradient(90deg, var(--coral), var(--leak)); }
+.budget-progress-caption{ display:flex; justify-content:space-between; font-size:13px; color: var(--ink-soft); margin-top:10px; }
+.budget-summary-grid{ display:grid; grid-template-columns: repeat(3,1fr); gap:16px; margin-bottom:22px; }
+.budget-mini-card{ background: var(--sand); border-radius: var(--radius-sm); padding:16px 18px; }
+.budget-mini-card .lbl{ font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; color: var(--ink-soft); font-weight:700; }
+.budget-mini-card .val{ font-family: var(--font-display); font-size:22px; margin-top:6px; }
+.budget-mini-card .val.leak{ color: var(--leak); }
+.budget-mini-card .val.good{ color: var(--good); }
+.budget-no-cap{ text-align:center; padding:40px 20px; color: var(--ink-soft); }
+@media (max-width:700px){ .budget-summary-grid{ grid-template-columns:1fr; } }
+
+/* ============================================================
+   Admin: add-user affordance + per-row delete
+   ============================================================ */
+.add-user-form{ display:grid; grid-template-columns: repeat(3,1fr) auto; gap:10px; align-items:start; margin-bottom:18px; }
+.add-user-form .field{ margin-bottom:0; }
+@media (max-width:900px){ .add-user-form{ grid-template-columns:1fr; } }
+.role-pill{ font-family: var(--font-mono); font-size:10.5px; padding:3px 9px; border-radius:999px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+.role-pill.admin{ background: rgba(31,111,107,0.15); color: var(--teal); }
+.role-pill.user{ background: var(--sand); color: var(--ink-soft); }
+
+/* ============================================================
+   Renewal badges on subscription tickets
+   ============================================================ */
+.ticket-badges{ display:flex; flex-wrap:wrap; gap:6px; }
+.badge-renewal{ background: var(--sand); color: var(--ink); }
+.badge-renewal.red{ background: rgba(214,69,69,0.12); color: var(--leak); }
+.badge-renewal.yellow{ background: rgba(201,146,43,0.15); color: var(--gold); }
+.badge-renewal.green{ background: rgba(47,158,110,0.12); color: var(--good); }
+
+/* ============================================================
+   Renewal calendar
+   ============================================================ */
+.calendar-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.calendar-head h3{ font-size:19px; font-weight:600; }
+.calendar-weekdays{ display:grid; grid-template-columns: repeat(7,1fr); gap:6px; margin-bottom:8px; }
+.calendar-weekdays span{ text-align:center; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color: var(--ink-soft); }
+.calendar-grid{ display:grid; grid-template-columns: repeat(7,1fr); gap:6px; }
+.cal-cell{
+  min-height: 88px; border-radius: 10px; background: var(--sand); border:1px solid transparent;
+  padding: 8px 7px; display:flex; flex-direction:column; gap:4px; transition: box-shadow .15s ease;
+}
+.cal-cell.empty{ background:transparent; }
+.cal-cell.today{ border-color: var(--coral); box-shadow: 0 0 0 2px rgba(232,87,61,0.15); }
+.cal-cell.has-events{ background: var(--paper); }
+.cal-daynum{ font-family: var(--font-mono); font-size:12px; font-weight:700; color: var(--ink-soft); }
+.cal-cell.today .cal-daynum{ color: var(--coral); }
+.cal-entries{ display:flex; flex-direction:column; gap:3px; overflow:hidden; }
+.cal-entry{ font-size:11px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cal-entry span{ color: var(--ink-soft); }
+.calendar-legend{ display:flex; gap:18px; flex-wrap:wrap; margin-top:16px; font-size:12.5px; color: var(--ink-soft); }
+@media (max-width:700px){
+  .cal-cell{ min-height:64px; padding:6px 5px; }
+  .cal-entry{ font-size:9.5px; }
+  .calendar-weekdays span{ font-size:9.5px; }
+}
+
+/* ============================================================
+   Landing page: animated phone mockup (replaces the static
+   preview card in the hero) — pure CSS, no JS required.
+   ============================================================ */
+.phone-mock{
+  width: 260px; margin: 0 auto; background: #0b1416; border-radius: 40px;
+  padding: 16px 12px; box-shadow: 0 40px 80px rgba(20,38,42,0.4), 0 0 0 8px rgba(255,255,255,0.03) inset;
+  position: relative;
+}
+.phone-notch{
+  width: 86px; height: 20px; background: #0b1416; border-radius: 0 0 16px 16px;
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 3;
+}
+.phone-screen{
+  background: linear-gradient(180deg, var(--ink-solid) 0%, #0b1416 100%);
+  border-radius: 28px; padding: 30px 14px 18px; min-height: 460px; position: relative; overflow: hidden;
+}
+.phone-status{ display:flex; justify-content:space-between; align-items:center; color: rgba(255,255,255,0.5); font-family: var(--font-mono); font-size:10.5px; margin-bottom:18px; }
+.phone-live-dot{ width:6px; height:6px; border-radius:50%; background:#3AB088; display:inline-block; margin-right:5px; animation: livePulse 1.6s ease-in-out infinite; }
+@keyframes livePulse{ 0%,100%{ opacity:1; box-shadow:0 0 0 0 rgba(58,176,136,0.5);} 50%{ opacity:.5; box-shadow:0 0 0 5px rgba(58,176,136,0);} }
+.phone-app-header{ text-align:center; color:#fff; margin-bottom:18px; }
+.phone-app-header .brand-mini{ font-family: var(--font-display); font-size:20px; font-weight:600; }
+.phone-app-header .sub{ font-size:11px; color: rgba(255,255,255,0.55); margin-top:3px; font-family: var(--font-mono); }
+.phone-notify-list{ display:flex; flex-direction:column; gap:10px; }
+.phone-notify{
+  background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-left:3.5px solid var(--coral);
+  border-radius: 12px; padding: 10px 12px; color:#fff; opacity:0;
+  animation: notifySlideIn .7s cubic-bezier(.2,.8,.2,1) forwards, floaty 4.5s ease-in-out infinite;
+}
+.phone-notify .pn-top{ display:flex; justify-content:space-between; align-items:center; font-size:12.5px; font-weight:700; }
+.phone-notify .pn-sub{ font-size:10.5px; color: rgba(255,255,255,0.55); margin-top:3px; font-family: var(--font-mono); }
+.phone-notify.n1{ border-left-color:#3AB088; animation-delay: .2s, 1.4s; }
+.phone-notify.n2{ border-left-color: var(--coral); animation-delay: .55s, 1.9s; }
+.phone-notify.n3{ border-left-color: var(--gold); animation-delay: .9s, 2.4s; }
+.phone-notify.n4{ border-left-color: var(--teal); animation-delay: 1.25s, 2.9s; }
+@keyframes notifySlideIn{ from{ opacity:0; transform: translateY(18px) scale(.97); } to{ opacity:1; transform: translateY(0) scale(1); } }
+.phone-blob{ position:absolute; width:220px; height:220px; border-radius:50%; background: radial-gradient(circle, rgba(232,87,61,0.35), transparent 65%); top:-60px; right:-60px; filter: blur(10px); }
+
+.hero-visual{ position:relative; }
+@media (max-width:900px){ .phone-mock{ width:230px; } }
+
+/* ============================================================
+   App-shell footer (dashboard / admin dashboard)
+   ============================================================ */
+.app-footer{
+  display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;
+  padding: 20px 40px; border-top: 1px solid var(--line); color: var(--ink-soft); font-size:12.5px;
+  margin-top: auto;
+}
+.app-footer .dot{ width:8px; height:8px; border-radius:50%; background: var(--coral); display:inline-block; margin-right:7px; box-shadow: 0 0 0 3px rgba(232,87,61,0.15); }
+.app-footer .foot-brand{ font-family: var(--font-display); font-weight:600; color: var(--ink); font-size:14px; display:flex; align-items:center; }
+.app-footer .foot-links{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.app-footer .foot-links a{ color: var(--ink-soft); transition: color .15s ease; }
+.app-footer .foot-links a:hover{ color: var(--coral); }
+@media (max-width:980px){ .app-footer{ padding: 18px 18px 24px; flex-direction:column; align-items:flex-start; } }
+
+/* ============================================================
+   Mock "pay to confirm" flow — shown after adding a subscription
+   with a payment method attached. Purely a UI simulation.
+   ============================================================ */
+.payment-modal-box{ text-align:center; }
+.payment-step h3{ font-size:19px; margin: 6px 0 8px; }
+.payment-step p{ font-size:13.5px; color: var(--ink-soft); line-height:1.55; margin-bottom:20px; }
+.payment-icon{ font-size:40px; line-height:1; margin-bottom:6px; }
+.payment-icon.success{ animation: paySuccessPop .5s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes paySuccessPop{ 0%{ transform:scale(.3); opacity:0; } 70%{ transform:scale(1.15); opacity:1; } 100%{ transform:scale(1); } }
+.pin-input{
+  width:100%; text-align:center; font-size:26px; letter-spacing: 10px; font-family: var(--font-mono);
+  padding: 12px 14px; border-radius: var(--radius-sm); border: 1.5px solid var(--line);
+  background: var(--surface-2); color: var(--ink); margin-bottom:8px;
+}
+.pin-input:focus{ border-color: var(--teal); outline:none; box-shadow: 0 0 0 4px rgba(31,111,107,0.12); }
+.payment-spinner{
+  width:44px; height:44px; margin: 0 auto 16px; border-radius:50%;
+  border: 4px solid var(--sand); border-top-color: var(--coral); animation: spin .8s linear infinite;
+}
+@keyframes spin{ to{ transform: rotate(360deg); } }

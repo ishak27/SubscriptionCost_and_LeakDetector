@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cove — Subscription Overlap &amp; Cost Leak Detector</title>
+<link rel="stylesheet" href="css/index.css" />
+</head>
+<body>
+
+<nav class="landing-nav rise-in">
+  <div class="brand"><span class="dot"></span> Cove</div>
+  <div class="links">
+    <button class="theme-toggle on-light btn-sm" id="themeToggle" type="button" style="padding:9px 14px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <span id="themeLabel">Dark</span>
+    </button>
+    <a href="login.html" class="btn btn-ghost btn-sm">Log in</a>
+    <a href="login.html#signup" class="btn btn-primary btn-sm">Get started</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-grid">
+    <div class="hero-copy rise-in" style="animation-delay:.05s">
+      <p class="eyebrow">Subscription overlap &amp; cost leak detector</p>
+      <h1>Stop your money from <em>quietly leaking</em> into subscriptions you forgot about.</h1>
+      <p class="lede">Cove watches every subscription you add — music, video, fitness, cloud — and flags the overlaps and forgotten renewals that leak money out of your budget every single month.</p>
+      <div class="hero-ctas">
+        <a href="login.html#signup" class="btn btn-primary">Create free account</a>
+        <a href="login.html" class="btn btn-ghost">I already have an account</a>
+      </div>
+    </div>
+
+    <div class="hero-visual rise-in" style="animation-delay:.15s">
+      <div class="phone-blob"></div>
+      <div class="phone-mock">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="phone-status"><span><span class="phone-live-dot"></span>LIVE</span><span>9:41</span></div>
+          <div class="phone-app-header">
+            <div class="brand-mini">Cove</div>
+            <div class="sub">3 renewals coming up</div>
+          </div>
+          <div class="phone-notify-list">
+            <div class="phone-notify">
+              <div class="pn-top"><span>🔴 Netflix</span><span>Aug 22</span></div>
+              <div class="pn-sub">Renews in 3 days · ₹649/mo</div>
+            </div>
+            <div class="phone-notify n1">
+              <div class="pn-top"><span>🟡 Spotify</span><span>Aug 27</span></div>
+              <div class="pn-sub">Renews in 8 days · ₹119/mo</div>
+            </div>
+            <div class="phone-notify n2">
+              <div class="pn-top"><span>🟢 Amazon Prime</span><span>Aug 30</span></div>
+              <div class="pn-sub">Renews in 11 days · ₹1,499/yr</div>
+            </div>
+            <div class="phone-notify n3">
+              <div class="pn-top"><span>⚠️ Overlap found</span><span>Music</span></div>
+              <div class="pn-sub">Spotify + Apple Music · save ₹99/mo</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="floating-chip c1">🎵 2 music apps found</div>
+      <div class="floating-chip c2">💧 $220.80 leaking / yr</div>
+    </div>
+  </div>
+</header>
+
+<section class="features" id="features">
+  <div class="card feature rise-in" style="animation-delay:.05s">
+    <div class="num">01</div>
+    <h3>Add in seconds</h3>
+    <p>Name, category, cost and billing cycle — that's all it takes to track a subscription. Weekly, monthly or yearly, Cove converts everything for you.</p>
+  </div>
+  <div class="card feature rise-in" style="animation-delay:.15s">
+    <div class="num">02</div>
+    <h3>Catch the overlaps</h3>
+    <p>Two music apps? Three cloud drives? Cove groups your subscriptions by category and calls out duplicates the moment they happen.</p>
+  </div>
+  <div class="card feature rise-in" style="animation-delay:.25s">
+    <div class="num">03</div>
+    <h3>See the annual leak</h3>
+    <p>A small monthly overlap adds up fast. Cove annualizes every leak so you see the real cost of "I'll cancel it later."</p>
+  </div>
+</section>
+
+<section class="how-it-works" id="how-it-works">
+  <div class="inner">
+    <div class="how-head">
+      <h2>Three steps between you and a tighter budget.</h2>
+      <a href="login.html#signup" class="btn btn-primary">Start tracking</a>
+    </div>
+    <div class="steps">
+      <div class="step rise-in" style="animation-delay:.05s">
+        <div class="step-index">01</div>
+        <h4>Log every subscription</h4>
+        <p>Add each service with its category and billing cycle. Edit or delete anytime as your subscriptions change.</p>
+      </div>
+      <div class="step rise-in" style="animation-delay:.15s">
+        <div class="step-index">02</div>
+        <h4>Watch the tide gauge</h4>
+        <p>Your dashboard fills a live "leak tide" showing what share of your spend is healthy versus overlapping.</p>
+      </div>
+      <div class="step rise-in" style="animation-delay:.25s">
+        <div class="step-index">03</div>
+        <h4>Cancel with confidence</h4>
+        <p>See exactly which subscription to drop and how much you'll save annually — backed by real numbers, not guesswork.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-band">
+  <p class="eyebrow" style="display:block;margin-bottom:14px;">Free · No card required</p>
+  <h2>Your subscriptions are leaking somewhere. Let's find it.</h2>
+  <p>It takes under a minute to see your first leak report.</p>
+  <a href="login.html#signup" class="btn btn-primary">Create free account</a>
+</section>
+
+<footer class="landing-footer">
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="brand"><span class="dot"></span> Cove</div>
+      <p>Cove watches every subscription you add and flags the overlaps and forgotten renewals that leak money out of your budget every month.</p>
+    </div>
+
+    <div class="footer-col">
+      <h5>Product</h5>
+      <a href="#features">Add in seconds</a>
+      <a href="#features">Catch the overlaps</a>
+      <a href="#how-it-works">Leak tide gauge</a>
+    </div>
+
+    <div class="footer-col">
+      <h5>Account</h5>
+      <a href="login.html">Log in</a>
+      <a href="login.html#signup">Create account</a>
+      <a href="admin-login.html">Admin login</a>
+    </div>
+
+    <div class="footer-col">
+      <h5>Project</h5>
+      <a href="#how-it-works">How it works</a>
+      <span class="footer-note">Built for a college mini-project</span>
+      <span class="footer-note">Demo data included</span>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div>© 2026 Cove · College mini-project, not a real financial product.</div>
+    <div>Made with a lot of coffee and a little bit of tide.</div>
+  </div>
+</footer>
+
+<script src="utils.js"></script>
+<script>
+  const themeLabel = document.getElementById("themeLabel");
+  themeLabel.textContent = getTheme() === "dark" ? "Light" : "Dark";
+  document.getElementById("themeToggle").addEventListener("click", () => {
+    toggleTheme();
+    themeLabel.textContent = getTheme() === "dark" ? "Light" : "Dark";
+  });
+</script>
+</body>
+</html>
