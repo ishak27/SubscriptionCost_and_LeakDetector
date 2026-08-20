@@ -1,56 +1,56 @@
-# 💳 Subscription Overlap & Cost Leak Detector
+# Subscription Overlap & Cost Leak Detector
 
-🚀 A backend application that helps users manage recurring subscriptions, identify overlapping services, and understand how much they are spending over time.
+## Overview
 
----
+This project helps users track their recurring subscriptions, identify potential overlapping services, and understand their monthly and yearly subscription expenses.
 
-## 📌 Problem Statement
+## Features
 
-With the increasing number of subscription-based services, users often end up paying for multiple services that provide similar features. This makes it difficult to track total spending and identify unnecessary or overlapping subscriptions.
+* Add and manage subscriptions
+* Store subscription name, category, cost, and billing cycle
+* Calculate monthly and yearly subscription costs
+* Group subscriptions based on categories
+* Identify potential subscription overlaps
+* Analyze overall subscription spending
+* Store subscription data for future use
 
-**Subscription Overlap & Cost Leak Detector** is designed to solve this problem by allowing users to record their subscriptions and analyze their spending based on **categories, billing cycles, and costs**.
+## Technologies Used
 
----
+* HTML
+* CSS
+* JavaScript
+* Node.js
+* Express.js
+* MongoDB
 
-## 🎯 Objectives
+## How It Works
 
-| 🎯 Objective | 📝 Description |
-|---|---|
-| 📋 **Track Subscriptions** | Manage all recurring subscriptions in one place |
-| 💰 **Calculate Expenses** | Calculate monthly and yearly subscription expenses |
-| 🔍 **Detect Overlaps** | Identify potentially overlapping services |
-| 💸 **Find Cost Leaks** | Identify unnecessary recurring expenses |
-| 📊 **Analyze Spending** | Provide a clear analysis of subscription spending |
+The user enters their subscription details such as the subscription name, category, cost, and billing cycle.
 
----
+The application then normalizes the subscription costs, groups subscriptions by category, and analyzes the data to identify possible overlaps and unnecessary expenses.
 
-## ✨ Features
-
-- ➕ **Add and manage subscriptions**
-- 🏷️ Store **subscription name, category, cost, and billing cycle**
-- 🔄 **Normalize billing cycles** into a common cost format
-- 📅 Calculate estimated **monthly and annual spending**
-- 🔎 Detect subscriptions belonging to the **same category**
-- ⚠️ Identify **potential subscription overlaps**
-- 🌐 Provide a **REST API** for subscription analysis
-- 💾 Support **persistent database storage**
-- 🧩 Follow a **structured backend architecture**
-
----
-
-## 🔄 How It Works
+## Project Structure
 
 ```text
-        📋 Add Subscription
-                ↓
-       🔄 Normalize Billing Cycle
-                ↓
-        💰 Calculate Costs
-                ↓
-        🏷️ Group by Category
-                ↓
-        🔍 Detect Overlaps
-                ↓
-        ⚠️ Find Cost Leaks
-                ↓
-        📊 Generate Analysis
+SubscriptionCost_and_LeakDetector/
+│
+├── JS_Files/
+├── Pages/
+├── Styles/
+└── README.md
+```
+
+## Future Scope
+
+* User authentication
+* Subscription renewal reminders
+* Detailed spending reports
+* Improved overlap detection
+* Personalized cost-saving suggestions
+* Advanced spending analytics
+
+## Contributors
+
+* Isha Kashyap
+* Sonal
+* Namya
