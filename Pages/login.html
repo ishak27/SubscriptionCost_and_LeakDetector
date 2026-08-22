@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Log in — Cove</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="auth-shell">
+  <aside class="auth-side">
+    <div class="content">
+      <a href="index.html" class="brand" style="margin-bottom:50px;display:inline-flex;"><span class="dot"></span> Cove</a>
+      <h2>Every subscription tells you what it costs. Almost none tell you what it's costing you.</h2>
+      <p>Cove groups your subscriptions by category so overlaps — two music apps, three cloud drives — are impossible to miss.</p>
+    </div>
+    <div class="auth-quote">“$18.40/mo across 3 overlaps → $220.80 leaking every year.”</div>
+  </aside>
+
+  <main class="auth-main">
+    <div class="auth-box fade-in">
+      <a href="index.html" class="brand"><span class="dot"></span> Cove</a>
+
+      <div class="auth-toggle">
+        <button type="button" id="tabLogin" class="active">Log in</button>
+        <button type="button" id="tabSignup">Sign up</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form id="loginForm" class="auth-form active" novalidate>
+        <h1>Welcome back</h1>
+        <p class="sub">Log in to see today's leak report.</p>
+        <div class="form-msg" id="loginMsg"></div>
+
+        <div class="field" id="loginEmailField">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="username" />
+          <div class="error-msg">Enter a valid email address.</div>
+        </div>
+        <div class="field" id="loginPasswordField">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+          <div class="error-msg">Password is required.</div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">Log in</button>
+
+        <div class="demo-hint">Demo login → user@demo.com / user123</div>
+        <p class="auth-foot">Looking for the admin panel? <a href="admin-login.html">Admin login →</a></p>
+      </form>
+
+      <!-- SIGNUP FORM -->
+      <form id="signupForm" class="auth-form" novalidate>
+        <h1>Create your account</h1>
+        <p class="sub">Free forever. Takes under a minute.</p>
+        <div class="form-msg" id="signupMsg"></div>
+
+        <div class="field" id="signupNameField">
+          <label for="signupName">Full name</label>
+          <input type="text" id="signupName" placeholder="Jordan Lee" autocomplete="name" />
+          <div class="error-msg">Please enter your name.</div>
+        </div>
+        <div class="field" id="signupEmailField">
+          <label for="signupEmail">Email</label>
+          <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="username" />
+          <div class="error-msg">Enter a valid email address.</div>
+        </div>
+        <div class="field" id="signupPasswordField">
+          <label for="signupPassword">Password</label>
+          <input type="password" id="signupPassword" placeholder="At least 4 characters" autocomplete="new-password" />
+          <div class="error-msg">Password should be at least 4 characters.</div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">Create account</button>
+        <p class="auth-foot">Already have an account? <a href="#" id="switchToLogin">Log in →</a></p>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script src="utils.js"></script>
+<script src="auth.js"></script>
+<script>
+  // ---- Tab switching between Login and Signup ----
+  const tabLogin = document.getElementById("tabLogin");
+  const tabSignup = document.getElementById("tabSignup");
+  const loginForm = document.getElementById("loginForm");
+  const signupForm = document.getElementById("signupForm");
+
+  function showLogin() {
+    tabLogin.classList.add("active");
+    tabSignup.classList.remove("active");
+    loginForm.classList.add("active");
+    signupForm.classList.remove("active");
+  }
+  function showSignup() {
+    tabSignup.classList.add("active");
+    tabLogin.classList.remove("active");
+    signupForm.classList.add("active");
+    loginForm.classList.remove("active");
+  }
+
+  tabLogin.addEventListener("click", showLogin);
+  tabSignup.addEventListener("click", showSignup);
+  document.getElementById("switchToLogin").addEventListener("click", (e) => {
+    e.preventDefault();
+    showLogin();
+  });
+
+  // If someone arrives via a #signup link from the landing page, open that tab
+  if (window.location.hash === "#signup") showSignup();
+
+  // If already logged in as a user, skip straight to the dashboard
+  const existingSession = getSession();
+  if (existingSession && existingSession.role === "user") {
+    window.location.href = "dashboard.html";
+  }
+
+  // ---- Helpers for showing/clearing field errors ----
+  function setFieldError(fieldId, hasError) {
+    document.getElementById(fieldId).classList.toggle("error", hasError);
+  }
+  function showFormMessage(id, text, type) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = `form-msg show ${type}`;
+  }
+
+  // ---- LOGIN submit ----
+  loginForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+
+    setFieldError("loginEmailField", !email);
+    setFieldError("loginPasswordField", !password);
+    if (!email || !password) {
+      showFormMessage("loginMsg", "Please fill in both fields.", "error");
+      return;
+    }
+
+    const result = loginUser(email, password, "user");
+    if (result.ok) {
+      showFormMessage("loginMsg", "Welcome back! Redirecting…", "success");
+      setTimeout(() => (window.location.href = "dashboard.html"), 500);
+    } else {
+      showFormMessage("loginMsg", result.message, "error");
+    }
+  });
+
+  // ---- SIGNUP submit ----
+  signupForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const name = document.getElementById("signupName").value.trim();
+    const email = document.getElementById("signupEmail").value.trim();
+    const password = document.getElementById("signupPassword").value;
+
+    setFieldError("signupNameField", !name);
+    setFieldError("signupEmailField", !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+    setFieldError("signupPasswordField", password.length < 4);
+
+    const result = signupUser({ name, email, password });
+    if (result.ok) {
+      showFormMessage("signupMsg", "Account created! Redirecting…", "success");
+      setTimeout(() => (window.location.href = "dashboard.html"), 500);
+    } else {
+      showFormMessage("signupMsg", result.message, "error");
+    }
+  });
+</script>
+</body>
+</html>
