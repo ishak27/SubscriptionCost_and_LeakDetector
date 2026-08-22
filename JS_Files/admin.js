@@ -1,20 +1,16 @@
-/* ============================================================
-   admin.js — the admin dashboard
-   Reuses the same calculation helpers as the user dashboard
-   (rewritten locally so this file can be understood on its own).
-   Concepts used: arrays/objects, destructuring, array methods
-   (map/filter/reduce/sort), template literals, DOM events.
-   ============================================================ */
+// Admin Dashboard JavaScript
 
+// Check that the logged in user is an admin
 const adminSession = requireRole("admin");
 
+// -------------------- Header --------------------
 function initHeader() {
   document.getElementById("sideUserName").textContent = adminSession.name;
   document.getElementById("avatarInitial").textContent = adminSession.name.charAt(0).toUpperCase();
   document.getElementById("todayDate").textContent = todayString();
 }
 
-// ---- Navigation (same simple pattern as app.js) ----
+// -------------------- Navigation --------------------
 function switchView(viewName) {
   document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
   document.querySelectorAll(".side-nav button").forEach((b) => b.classList.remove("active"));
@@ -36,16 +32,20 @@ document.getElementById("scrim").addEventListener("click", () => {
 });
 document.getElementById("logoutBtn").addEventListener("click", logout);
 
-// ---- Theme + currency preferences (helpers live in utils.js) ----
+// -------------------- Theme and Currency --------------------
 function initPreferenceControls() {
   const themeToggle = document.getElementById("themeToggle");
   const themeLabel = document.getElementById("themeLabel");
   const currencySelect = document.getElementById("currencySelect");
 
   function refreshThemeLabel() {
-    themeLabel.textContent = getTheme() === "dark" ? "Light" : "Dark";
-  }
-  refreshThemeLabel();
+        if (getTheme() === "dark") {
+            themeLabel.textContent = "Light";
+        }else {
+            themeLabel.textContent = "Dark";
+        }
+    }
+    refreshThemeLabel();
   themeToggle.addEventListener("click", () => {
     toggleTheme();
     refreshThemeLabel();
@@ -58,9 +58,9 @@ function initPreferenceControls() {
   });
 }
 
-// ---- Admin-only: add / remove user accounts ----
-// This is the capability regular users don't have — only an admin
-// session can create or delete another account.
+// -------------------- Add and Remove Users --------------------
+
+// Stores the email of user selected for deletion
 let pendingDeleteUserEmail = null;
 
 function adminAddUser({ name, email, password }) {
@@ -74,12 +74,15 @@ function adminAddUser({ name, email, password }) {
     return { ok: false, message: "An account with that email already exists." };
   }
 
+  // Add new user to users array
   users.push({ name, email, password, role: "user" });
   saveAllUsers(users);
+  // Create empty subscription list for new user
   writeJSON(STORAGE_KEYS.SUBS_PREFIX + email, []);
   return { ok: true };
 }
 
+// Function to delete a user
 function adminDeleteUser(email) {
   const users = getAllUsers().filter((u) => u.email !== email);
   saveAllUsers(users);
@@ -88,17 +91,22 @@ function adminDeleteUser(email) {
 }
 
 const addUserForm = document.getElementById("addUserForm");
+
+// Remove error styles from form
 function clearAddUserErrors() {
   ["newUserNameField", "newUserEmailField", "newUserPasswordField"].forEach((id) => document.getElementById(id).classList.remove("error"));
 }
+
+// Display message below add user form
 function showAddUserMessage(text, type) {
   const el = document.getElementById("addUserMsg");
   el.textContent = text;
   el.className = `form-msg show ${type}`;
 }
 
+// When add user form is submitted
 addUserForm.addEventListener("submit", function (e) {
-  e.preventDefault();
+  e.preventDefault();  // Prevent page from refreshing
   clearAddUserErrors();
 
   const name = document.getElementById("newUserName").value.trim();
@@ -114,17 +122,20 @@ addUserForm.addEventListener("submit", function (e) {
     return;
   }
 
+  // User was added successfully
   showAddUserMessage(`${name} added.`, "success");
-  addUserForm.reset();
-  showToast(`${name} added as a user.`, "success");
-  renderAll();
+  addUserForm.reset();  // Clear form
+  showToast(`${name} added as a user.`, "success");   // Show success notification
+  renderAll();    // Refresh dashboard
 });
 
+// Cancel delete button
 document.getElementById("cancelDeleteUserBtn").addEventListener("click", () => {
   pendingDeleteUserEmail = null;
   document.getElementById("deleteUserModal").classList.remove("show");
 });
 
+// Confirm delete button
 document.getElementById("confirmDeleteUserBtn").addEventListener("click", () => {
   if (!pendingDeleteUserEmail) return;
   adminDeleteUser(pendingDeleteUserEmail);
@@ -134,6 +145,7 @@ document.getElementById("confirmDeleteUserBtn").addEventListener("click", () => 
   renderAll();
 });
 
+// Ask admin before deleting user
 function askDeleteUser(email, name) {
   pendingDeleteUserEmail = email;
   document.getElementById("deleteUserModalText").textContent =
@@ -141,7 +153,9 @@ function askDeleteUser(email, name) {
   document.getElementById("deleteUserModal").classList.add("show");
 }
 
-// ---- Gather every regular user's subscriptions into one place ----
+// -------------------- User Subscription Summary --------------------
+
+// Create summary for every normal user
 function buildUserSummaries() {
   const users = getAllUsers().filter((u) => u.role === "user");
 
@@ -169,8 +183,9 @@ function buildUserSummaries() {
   });
 }
 
-// Same "roll forward to next occurrence" logic as the user dashboard,
-// reimplemented locally since admin.js doesn't load app.js.
+// -------------------- Renewal Date --------------------
+
+// Find next renewal date of a subscription.
 function nextRenewalDate(sub) {
   if (!sub.renewalDate) return null;
   const date = new Date(sub.renewalDate + "T00:00:00");
@@ -187,6 +202,9 @@ function nextRenewalDate(sub) {
   return date;
 }
 
+// -------------------- Render Complete Dashboard --------------------
+
+// Refresh all sections of admin dashboard
 function renderAll() {
   const summaries = buildUserSummaries();
   renderStats(summaries);
@@ -208,10 +226,15 @@ function renderStats(summaries) {
   document.getElementById("statLeak").textContent = formatCurrency(totalLeakAnnual);
 }
 
+// -------------------- Dashboard Statistics --------------------
+
+// Display total users, subscriptions and spending
 function renderChart(summaries) {
   const area = document.getElementById("chartArea");
   // Merge every user's category totals into one combined object
   const combined = {};
+
+  // Go through every user's summary
   summaries.forEach((u) => {
     Object.keys(u.categoryTotals).forEach((category) => {
       const monthlyForCat = totalMonthlyOf(u.categoryTotals[category]);
@@ -239,10 +262,12 @@ function renderChart(summaries) {
     .join("")}</div>`;
 }
 
+// Calculate total monthly cost of a subscription list
 function totalMonthlyOf(list) {
   return list.reduce((sum, s) => sum + toMonthly(s.cost, s.billingCycle), 0);
 }
 
+// Show percentage of monthly spending that may be leaking
 function renderTideGauge(summaries) {
   const totalMonthly = summaries.reduce((sum, u) => sum + u.monthly, 0);
   const totalLeakMonthly = summaries.reduce((sum, u) => sum + u.leakMonthly, 0);
@@ -255,6 +280,7 @@ function renderTideGauge(summaries) {
   document.getElementById("tideAmt").textContent = formatCurrency(totalLeakMonthly) + " / mo leaking";
 }
 
+// Show users with highest yearly cost leak
 function renderTopLeakers(summaries) {
   const area = document.getElementById("topLeakers");
   const ranked = [...summaries].sort((a, b) => b.leakAnnual - a.leakAnnual).filter((u) => u.leakAnnual > 0).slice(0, 5);
@@ -281,6 +307,7 @@ function renderTopLeakers(summaries) {
     .join("");
 }
 
+// Display all users inside the users table
 function renderUsersTable(summaries) {
   const tbody = document.getElementById("usersTableBody");
   const term = (document.getElementById("userSearch").value || "").trim().toLowerCase();
@@ -323,7 +350,9 @@ function renderUsersTable(summaries) {
 
 document.getElementById("userSearch").addEventListener("input", () => renderUsersTable(buildUserSummaries()));
 
-// ---- Platform insights: extra info only admins get to see ----
+// ---- Platform insights: extra info only admins get to see ---- 
+
+// Show important insights from all users
 function renderInsights(summaries) {
   const area = document.getElementById("insightsArea");
   const allSubs = summaries.flatMap((u) => u.subs);
@@ -333,7 +362,6 @@ function renderInsights(summaries) {
     return;
   }
 
-  // Top category platform-wide, by combined monthly spend
   const categoryTotals = {};
   allSubs.forEach((s) => {
     const key = s.category || "Other";
@@ -341,7 +369,6 @@ function renderInsights(summaries) {
   });
   const topCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0];
 
-  // Most common payment method across every tracked subscription
   const paymentCounts = {};
   allSubs.forEach((s) => {
     if (!s.paymentMethod) return;
@@ -384,8 +411,12 @@ const PAYMENT_ICON_ADMIN = {
   Other: "💰",
 };
 
-// ---- Per-user drill-down modal ----
+// ---- Per-user drill-down modal ---- 
+
+// Open modal to show subscriptions of one user
 function openUserDetail(email) {
+
+  // Find selected user using email
   const u = buildUserSummaries().find((s) => s.email === email);
   if (!u) return;
 
@@ -396,8 +427,11 @@ function openUserDetail(email) {
   if (u.subs.length === 0) {
     area.innerHTML = `<div class="empty-state"><h4>No subscriptions</h4><p>This user hasn't tracked anything yet.</p></div>`;
   } else {
+
+    // Create subscription cards
     area.innerHTML = u.subs
       .map((s) => {
+        // Find next renewal date
         const next = nextRenewalDate(s);
         const renewLabel = next ? next.toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—";
         return `
@@ -410,14 +444,17 @@ function openUserDetail(email) {
       })
       .join("");
   }
+  // Open user details modal
   document.getElementById("userDetailModal").classList.add("show");
 }
-
+// Close user details modal
 document.getElementById("closeUserDetailBtn").addEventListener("click", () => {
   document.getElementById("userDetailModal").classList.remove("show");
 });
 
-// ---- Boot ----
+// ---- Boot ---- 
+
+// Run functions when admin page starts
 initHeader();
 initPreferenceControls();
 renderAll();
