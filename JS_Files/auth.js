@@ -1,17 +1,8 @@
-/* ============================================================
-   auth.js
-   Handles the "database" of users (kept in localStorage), plus
-   login / signup / logout / route-guarding.
-   Concepts used: arrays & array methods (find, some, filter),
-   objects, destructuring, spread, conditions, events, loops.
-   ============================================================ */
 
-// ---- 1. Seed some demo data the very first time the app runs ----
-// This means the app is never "empty" — a college demo / viva can
-// log straight in without creating an account first.
+
 function seedDemoData() {
   const existingUsers = readJSON(STORAGE_KEYS.USERS, null);
-  if (existingUsers) return; // already seeded, do nothing
+  if (existingUsers) return; 
 
   const demoUsers = [
     { name: "Demo User", email: "user@demo.com", password: "user123", role: "user" },
@@ -21,7 +12,7 @@ function seedDemoData() {
   ];
   writeJSON(STORAGE_KEYS.USERS, demoUsers);
 
-  // Give the main demo user a realistic, slightly leaky subscription list
+  
   const demoSubs = [
     { id: makeId(), name: "Spotify", category: "Music", cost: 119, billingCycle: "monthly", renewalDate: "2026-08-27", paymentMethod: "GPay", cardLast4: "", createdAt: new Date().toISOString() },
     { id: makeId(), name: "Apple Music", category: "Music", cost: 99, billingCycle: "monthly", renewalDate: "2026-09-05", paymentMethod: "Credit Card", cardLast4: "4521", createdAt: new Date().toISOString() },
@@ -33,8 +24,7 @@ function seedDemoData() {
   writeJSON(STORAGE_KEYS.SUBS_PREFIX + "user@demo.com", demoSubs);
   writeJSON(STORAGE_KEYS.BUDGET_PREFIX + "user@demo.com", 3200);
 
-  // Smaller sample sets for the other two demo users so the admin
-  // dashboard has more than one row to show.
+  
   writeJSON(STORAGE_KEYS.SUBS_PREFIX + "priya@demo.com", [
     { id: makeId(), name: "YouTube Premium", category: "Video", cost: 149, billingCycle: "monthly", renewalDate: "2026-08-25", paymentMethod: "PhonePe", cardLast4: "", createdAt: new Date().toISOString() },
     { id: makeId(), name: "Notion", category: "Productivity", cost: 8, billingCycle: "monthly", renewalDate: "2026-09-02", paymentMethod: "PayPal", cardLast4: "", createdAt: new Date().toISOString() },
@@ -47,7 +37,7 @@ function seedDemoData() {
 }
 seedDemoData();
 
-// ---- 2. Basic user-store helpers ----
+
 function getAllUsers() {
   return readJSON(STORAGE_KEYS.USERS, []);
 }
@@ -58,13 +48,13 @@ function saveAllUsers(users) {
 
 function findUserByEmail(email) {
   const users = getAllUsers();
-  // .find() returns the first matching object, or undefined
+
   return users.find((u) => u.email.toLowerCase() === email.toLowerCase());
 }
 
-// ---- 3. Session helpers ----
+
 function setSession(user) {
-  // Destructuring: pull just the fields we need out of the user object
+  
   const { name, email, role } = user;
   writeJSON(STORAGE_KEYS.SESSION, { name, email, role });
 }
@@ -77,8 +67,7 @@ function clearSession() {
   localStorage.removeItem(STORAGE_KEYS.SESSION);
 }
 
-// Redirects away if nobody is logged in, or if the wrong role is
-// trying to view a page (e.g. a normal user opening admin-dashboard.html).
+
 function requireRole(role) {
   const session = getSession();
   if (!session || session.role !== role) {
@@ -87,8 +76,7 @@ function requireRole(role) {
   return session;
 }
 
-// ---- 4. Signup ----
-// Returns { ok: true } on success or { ok: false, message } on failure.
+
 function signupUser({ name, email, password }) {
   if (!name || !email || !password) {
     return { ok: false, message: "Please fill in every field." };
@@ -110,12 +98,12 @@ function signupUser({ name, email, password }) {
   const newUser = { name, email, password, role: "user" };
   users.push(newUser);
   saveAllUsers(users);
-  writeJSON(STORAGE_KEYS.SUBS_PREFIX + email, []); // empty subscription list to start
+  writeJSON(STORAGE_KEYS.SUBS_PREFIX + email, []); 
   setSession(newUser);
   return { ok: true };
 }
 
-// ---- 5. Login (shared by user + admin pages, filtered by expectedRole) ----
+
 function loginUser(email, password, expectedRole) {
   if (!email || !password) {
     return { ok: false, message: "Please enter both email and password." };

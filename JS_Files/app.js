@@ -1,20 +1,8 @@
-/* ============================================================
-   app.js — the user dashboard
-   Concepts used: variables, data types, type conversion,
-   operators, conditionals, loops, functions, arrays & array
-   methods (map/filter/reduce/find/sort), objects, destructuring,
-   DOM manipulation, events, form validation, localStorage,
-   ES6 template literals/arrow functions, callbacks, try/catch.
-   ============================================================ */
-
-// ---- 0. Guard this page: only logged-in users may see it ----
 const session = requireRole("user");
 
-// `subscriptions` is the single source of truth for this page.
-// We keep it as a normal array in memory and re-save it to
-// localStorage every time it changes.
+
 let subscriptions = [];
-let editingId = null; // null = "add mode", otherwise the id being edited
+let editingId = null; 
 let pendingDeleteId = null;
 
 const storageKey = STORAGE_KEYS.SUBS_PREFIX + session.email;
@@ -36,7 +24,6 @@ function saveBudget(amount) {
   writeJSON(budgetKey, amount);
 }
 
-// ---- Theme + currency preferences (shared helpers live in utils.js) ----
 function initPreferenceControls() {
   const themeToggle = document.getElementById("themeToggle");
   const themeLabel = document.getElementById("themeLabel");
@@ -58,7 +45,7 @@ function initPreferenceControls() {
   });
 }
 
-// ---- 1. Sidebar / header personalisation ----
+
 function initHeader() {
   document.getElementById("sideUserName").textContent = session.name;
   document.getElementById("avatarInitial").textContent = session.name.charAt(0).toUpperCase();
@@ -66,14 +53,14 @@ function initHeader() {
   document.getElementById("todayDate").textContent = todayString();
 }
 
-// ---- 2. Navigation between views ----
+
 function switchView(viewName) {
   document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
   document.querySelectorAll(".side-nav button").forEach((b) => b.classList.remove("active"));
   document.getElementById("view-" + viewName).classList.add("active");
   const navBtn = document.querySelector(`.side-nav button[data-view="${viewName}"]`);
   if (navBtn) navBtn.classList.add("active");
-  // close the mobile sidebar after choosing a view
+ 
   document.getElementById("sidebar").classList.remove("open");
   document.getElementById("scrim").classList.remove("show");
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -86,7 +73,7 @@ document.querySelectorAll("[data-goto]").forEach((btn) => {
   btn.addEventListener("click", () => switchView(btn.dataset.goto));
 });
 
-// Mobile hamburger menu
+
 document.getElementById("menuBtn").addEventListener("click", () => {
   document.getElementById("sidebar").classList.add("open");
   document.getElementById("scrim").classList.add("show");
@@ -98,31 +85,26 @@ document.getElementById("scrim").addEventListener("click", () => {
 
 document.getElementById("logoutBtn").addEventListener("click", logout);
 
-// ---- 3. Calculation helpers (pure functions — easy to explain in a viva) ----
 
-// Groups subscriptions by category using reduce().
-// Returns an object like { Music: [sub, sub], Video: [sub] }
 function groupByCategory(list) {
   return list.reduce((groups, sub) => {
     const key = sub.category || "Other";
-    if (!groups[key]) groups[key] = []; // first time we see this category
+    if (!groups[key]) groups[key] = []; 
     groups[key].push(sub);
     return groups;
   }, {});
 }
 
-// Categories that have 2 or more subscriptions are "overlaps".
-// For each overlapping category, the "leak" is every subscription
-// except the cheapest one — money you'd save by keeping just one.
+
 function findOverlaps(list) {
   const grouped = groupByCategory(list);
   const overlaps = [];
 
-  // Object.entries + destructuring turns {category: subs[]} into pairs
+ 
   for (const [category, subs] of Object.entries(grouped)) {
     if (subs.length < 2) continue; // not an overlap
 
-    // sort a *copy* of the array cheapest-first (by monthly cost)
+
     const sorted = [...subs].sort((a, b) => toMonthly(a.cost, a.billingCycle) - toMonthly(b.cost, b.billingCycle));
     const keep = sorted[0];
     const leaking = sorted.slice(1); // everything except the cheapest
@@ -138,7 +120,6 @@ function findOverlaps(list) {
     });
   }
 
-  // Show the biggest leaks first
   overlaps.sort((a, b) => b.leakMonthly - a.leakMonthly);
   return overlaps;
 }
@@ -150,12 +131,7 @@ function totalAnnual(list) {
   return list.reduce((sum, s) => sum + toAnnual(s.cost, s.billingCycle), 0);
 }
 
-// ---- 3b. Renewal date helpers ----
 
-// Rolls a stored "next renewal date" forward using the subscription's
-// billing cycle until it lands on today or later. This means a date
-// that already passed still shows up as the *next* upcoming renewal,
-// instead of silently going stale.
 function getNextRenewal(sub) {
   if (!sub.renewalDate) return null;
   const date = new Date(sub.renewalDate + "T00:00:00");
@@ -163,7 +139,7 @@ function getNextRenewal(sub) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  let guard = 0; // safety net so a bad cycle value can never loop forever
+  let guard = 0; 
   while (date < today && guard < 1000) {
     if (sub.billingCycle === "weekly") date.setDate(date.getDate() + 7);
     else if (sub.billingCycle === "yearly") date.setFullYear(date.getFullYear() + 1);
@@ -173,14 +149,14 @@ function getNextRenewal(sub) {
   return date;
 }
 
-// Whole days between today and a given date (can be negative if past)
+
 function daysUntil(date) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return Math.round((date - today) / 86400000);
 }
 
-// Traffic-light urgency used by both the ticket badges and the calendar
+
 function renewalUrgency(days) {
   if (days <= 3) return "red";
   if (days <= 10) return "yellow";
@@ -216,7 +192,7 @@ function paymentBadgeHtml(sub) {
   return `<span class="badge badge-sand">${icon} ${sub.paymentMethod}${cardBit}</span>`;
 }
 
-// ---- 4. Rendering ----
+
 
 function renderAll() {
   renderStats();
@@ -256,7 +232,7 @@ function renderChart() {
     return;
   }
   const grouped = groupByCategory(subscriptions);
-  // Build [{category, amount}] then sort largest first
+  
   const rows = Object.keys(grouped)
     .map((category) => ({ category, amount: totalMonthly(grouped[category]) }))
     .sort((a, b) => b.amount - a.amount);
@@ -282,14 +258,14 @@ function renderTideGauge() {
 
   const fill = document.getElementById("tideFill");
   fill.style.height = Math.min(pct, 100) + "%";
-  fill.classList.toggle("healthy", pct < 15); // green tide when leak is small
+  fill.classList.toggle("healthy", pct < 15); 
   document.getElementById("tidePct").textContent = pct + "%";
   document.getElementById("tideAmt").textContent = formatCurrency(leakMonthly) + " / mo leaking";
 }
 
 function renderQuickOverlaps() {
   const area = document.getElementById("quickOverlaps");
-  const overlaps = findOverlaps(subscriptions).slice(0, 3); // top 3 only
+  const overlaps = findOverlaps(subscriptions).slice(0, 3); 
   if (overlaps.length === 0) {
     area.innerHTML = emptyStateHtml("No overlaps detected", "Every category currently has just one subscription. Nice and tidy.");
     return;
@@ -327,7 +303,7 @@ function renderCategoryFilterOptions() {
   const categories = Object.keys(groupByCategory(subscriptions)).sort();
   select.innerHTML =
     `<option value="all">All categories</option>` + categories.map((c) => `<option value="${c}">${c}</option>`).join("");
-  // keep whatever the user had selected, if it still exists
+
   if ([...select.options].some((o) => o.value === current)) select.value = current;
 }
 
@@ -336,7 +312,7 @@ function renderSubList() {
   const searchTerm = document.getElementById("searchInput").value.trim().toLowerCase();
   const categoryFilter = document.getElementById("categoryFilter").value;
 
-  // Combine search + category filter using array .filter()
+
   const visible = subscriptions.filter((sub) => {
     const matchesSearch = sub.name.toLowerCase().includes(searchTerm);
     const matchesCategory = categoryFilter === "all" || sub.category === categoryFilter;
@@ -388,7 +364,7 @@ function renderSubList() {
     })
     .join("")}</div>`;
 
-  // Wire up the edit / delete buttons we just created
+ 
   area.querySelectorAll("[data-edit]").forEach((btn) => btn.addEventListener("click", () => startEdit(btn.dataset.edit)));
   area.querySelectorAll("[data-delete]").forEach((btn) => btn.addEventListener("click", () => askDelete(btn.dataset.delete)));
 }
@@ -422,7 +398,7 @@ function renderReportTable() {
     .join("");
 }
 
-// ---- Budget planner ----
+
 function renderBudget() {
   const area = document.getElementById("budgetArea");
   const budget = loadBudget();
@@ -516,8 +492,7 @@ document.getElementById("budgetForm").addEventListener("submit", function (e) {
   showToast("Budget saved.", "success");
 });
 
-// ---- Renewal calendar ----
-// Tracks which month is currently on screen; starts on today's month.
+
 let calendarCursor = new Date();
 calendarCursor.setDate(1);
 
@@ -531,8 +506,7 @@ function renderCalendar() {
     year: "numeric",
   });
 
-  // Group each subscription's *next* renewal by the day-of-month it
-  // falls on, but only for renewals landing in the month on screen.
+
   const byDay = {};
   subscriptions.forEach((sub) => {
     const next = getNextRenewal(sub);
@@ -611,7 +585,7 @@ function emptyStateHtml(title, sub) {
   </div>`;
 }
 
-// ---- 5. Form: add + edit share the same <form id="subForm"> ----
+
 const subForm = document.getElementById("subForm");
 
 function clearFieldErrors() {
@@ -620,8 +594,7 @@ function clearFieldErrors() {
   );
 }
 
-// Card-last-4 field only makes sense (and is only required) when the
-// chosen payment method is actually a card.
+
 const paymentMethodSelect = document.getElementById("subPaymentMethod");
 const cardLast4Field = document.getElementById("cardLast4Field");
 function syncCardFieldVisibility() {
@@ -671,7 +644,7 @@ function validateSubForm({ name, category, cost, cycle, renewalDate, paymentMeth
 subForm.addEventListener("submit", function (e) {
   e.preventDefault();
 
-  // Destructure the raw values straight off the inputs
+  
   const name = document.getElementById("subName").value.trim();
   const category = document.getElementById("subCategory").value;
   const cost = document.getElementById("subCost").value;
@@ -687,11 +660,10 @@ subForm.addEventListener("submit", function (e) {
   }
 
   if (editingId) {
-    // Edits just save straight away — no need to "re-pay" for a change.
+   
     commitSubscription(details);
   } else {
-    // New subscriptions go through the mock pay-to-confirm flow first;
-    // commitSubscription() only runs once the fake PIN step succeeds.
+  
     openPaymentModal(details);
   }
 });
@@ -699,7 +671,7 @@ subForm.addEventListener("submit", function (e) {
 function commitSubscription({ name, category, cost, cycle, renewalDate, paymentMethod, cardLast4 }) {
   try {
     if (editingId) {
-      // Update: find the matching object and replace its fields
+     
       const target = subscriptions.find((s) => s.id === editingId);
       if (target) {
         target.name = name;
@@ -712,7 +684,7 @@ function commitSubscription({ name, category, cost, cycle, renewalDate, paymentM
       }
       showToast(`${name} updated.`, "success");
     } else {
-      // Add: push a brand-new subscription object
+     
       subscriptions.push({
         id: makeId(),
         name,
@@ -731,13 +703,13 @@ function commitSubscription({ name, category, cost, cycle, renewalDate, paymentM
     resetForm();
     renderAll();
   } catch (err) {
-    // Defensive error handling in case localStorage ever fails (e.g. quota)
+   
     console.error(err);
     showToast("Something went wrong saving that subscription.", "error");
   }
 }
 
-// ---- Mock "pay to confirm" flow: PIN → processing → success ----
+ 
 let pendingPaymentDetails = null;
 
 function openPaymentModal(details) {
@@ -772,13 +744,12 @@ document.getElementById("paymentPayBtn").addEventListener("click", () => {
   }
   pinError.style.display = "none";
 
-  // Step 1: PIN accepted → show a brief "processing" state
+
   document.getElementById("paymentStepPin").style.display = "none";
   document.getElementById("paymentStepProcessing").style.display = "";
 
   setTimeout(() => {
-    // Step 2: "success" — this is a UI simulation only, nothing is
-    // actually charged; it just makes the demo feel real.
+   
     const details = pendingPaymentDetails;
     document.getElementById("paymentStepProcessing").style.display = "none";
     document.getElementById("paymentStepSuccess").style.display = "";
@@ -792,7 +763,7 @@ document.getElementById("paymentPayBtn").addEventListener("click", () => {
   }, 900);
 });
 
-// Allow pressing Enter inside the PIN box to submit it
+
 document.getElementById("paymentPinInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     e.preventDefault();
@@ -836,7 +807,7 @@ function resetForm() {
   document.getElementById("cancelEditBtn").style.display = "none";
 }
 
-// ---- 6. Delete with confirmation modal ----
+
 function askDelete(id) {
   const sub = subscriptions.find((s) => s.id === id);
   if (!sub) return;
@@ -863,11 +834,11 @@ document.getElementById("confirmDeleteBtn").addEventListener("click", () => {
   showToast(`${removed ? removed.name : "Subscription"} removed.`, "success");
 });
 
-// ---- 7. Search + filter listeners ----
+
 document.getElementById("searchInput").addEventListener("input", renderSubList);
 document.getElementById("categoryFilter").addEventListener("change", renderSubList);
 
-// ---- 8. Boot the page ----
+
 loadSubscriptions();
 initHeader();
 initPreferenceControls();
