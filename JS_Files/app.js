@@ -708,6 +708,7 @@ function commitSubscription({ name, category, cost, cycle, renewalDate, paymentM
   }
 }
 
+
  
 let pendingPaymentDetails = null;
 
