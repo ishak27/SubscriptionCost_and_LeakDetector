@@ -616,7 +616,6 @@ function validateSubForm({ name, category, cost, cycle, renewalDate, paymentMeth
     document.getElementById("categoryField").classList.add("error");
     valid = false;
   }
-  // type conversion: cost arrives from the input as a string
   if (!cost || isNaN(cost) || Number(cost) <= 0) {
     document.getElementById("costField").classList.add("error");
     valid = false;
@@ -824,7 +823,7 @@ document.getElementById("cancelDeleteBtn").addEventListener("click", () => {
 document.getElementById("confirmDeleteBtn").addEventListener("click", () => {
   if (!pendingDeleteId) return;
   const removed = subscriptions.find((s) => s.id === pendingDeleteId);
-  // array method: keep everything that does NOT match the deleted id
+ 
   subscriptions = subscriptions.filter((s) => s.id !== pendingDeleteId);
   saveSubscriptions();
   if (editingId === pendingDeleteId) resetForm();
