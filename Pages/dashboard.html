@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Dashboard — Cove</title>
-<link rel="stylesheet" href="css/dashboard.css" />
+<link rel="stylesheet" href="../Styles/dashboard.css" />
 </head>
 <body>
   <div class="mobile-topbar">
@@ -79,7 +79,6 @@
   <div class="content-col">
   <main class="main">
 
-    <!-- ============ OVERVIEW ============ -->
     <section class="view active" id="view-overview">
       <div class="topbar">
         <div>
@@ -150,7 +149,7 @@
       </div>
     </section>
 
-    <!-- ============ MANAGE SUBSCRIPTIONS ============ -->
+
     <section class="view" id="view-manage">
       <div class="topbar">
         <div>
@@ -252,7 +251,7 @@
       </div>
     </section>
 
-    <!-- ============ OVERLAPS & LEAKS ============ -->
+
     <section class="view" id="view-overlaps">
       <div class="topbar">
         <div>
@@ -265,7 +264,7 @@
       </div>
     </section>
     
-    <!-- ============ REPORTS ============ -->
+
     <section class="view" id="view-reports">
       <div class="topbar">
         <div>
@@ -286,7 +285,7 @@
       </div>
     </section>
 
-    <!-- ============ BUDGET PLANNER ============ -->
+
     <section class="view" id="view-budget">
       <div class="topbar">
         <div>
@@ -318,7 +317,7 @@
       </div>
     </section>
 
-    <!-- ============ RENEWAL CALENDAR ============ -->
+
     <section class="view" id="view-calendar">
       <div class="topbar">
         <div>
@@ -366,7 +365,7 @@
   </div>
 </div>
 
-<!-- Delete confirmation modal -->
+
 <div class="modal-overlay" id="deleteModal">
   <div class="modal-box">
     <h3>Remove this subscription?</h3>
@@ -378,7 +377,7 @@
   </div>
 </div>
 
-<!-- Mock payment-confirmation modal (PIN → processing → success) -->
+
 <div class="modal-overlay" id="paymentModal">
   <div class="modal-box payment-modal-box">
     <div class="payment-step" id="paymentStepPin">
@@ -405,8 +404,8 @@
   </div>
 </div>
 
-<script src="utils.js"></script>
-<script src="auth.js"></script>
-<script src="app.js"></script>
+<script src="../JS_Files/utils.js"></script>
+<script src="../JS_Files/auth.js"></script>
+<script src="../JS_Files/app.js"></script>
 </body>
 </html>

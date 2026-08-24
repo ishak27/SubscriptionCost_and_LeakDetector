@@ -1,11 +1,3 @@
-/* ============================================================
-   admin.js — the admin dashboard
-   Reuses the same calculation helpers as the user dashboard
-   (rewritten locally so this file can be understood on its own).
-   Concepts used: arrays/objects, destructuring, array methods
-   (map/filter/reduce/sort), template literals, DOM events.
-   ============================================================ */
-
 const adminSession = requireRole("admin");
 
 function initHeader() {
@@ -14,7 +6,6 @@ function initHeader() {
   document.getElementById("todayDate").textContent = todayString();
 }
 
-// ---- Navigation (same simple pattern as app.js) ----
 function switchView(viewName) {
   document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
   document.querySelectorAll(".side-nav button").forEach((b) => b.classList.remove("active"));
@@ -36,16 +27,19 @@ document.getElementById("scrim").addEventListener("click", () => {
 });
 document.getElementById("logoutBtn").addEventListener("click", logout);
 
-// ---- Theme + currency preferences (helpers live in utils.js) ----
 function initPreferenceControls() {
   const themeToggle = document.getElementById("themeToggle");
   const themeLabel = document.getElementById("themeLabel");
   const currencySelect = document.getElementById("currencySelect");
 
   function refreshThemeLabel() {
-    themeLabel.textContent = getTheme() === "dark" ? "Light" : "Dark";
-  }
-  refreshThemeLabel();
+        if (getTheme() === "dark") {
+            themeLabel.textContent = "Light";
+        }else {
+            themeLabel.textContent = "Dark";
+        }
+    }
+    refreshThemeLabel();
   themeToggle.addEventListener("click", () => {
     toggleTheme();
     refreshThemeLabel();
@@ -58,9 +52,7 @@ function initPreferenceControls() {
   });
 }
 
-// ---- Admin-only: add / remove user accounts ----
-// This is the capability regular users don't have — only an admin
-// session can create or delete another account.
+
 let pendingDeleteUserEmail = null;
 
 function adminAddUser({ name, email, password }) {
@@ -76,6 +68,7 @@ function adminAddUser({ name, email, password }) {
 
   users.push({ name, email, password, role: "user" });
   saveAllUsers(users);
+
   writeJSON(STORAGE_KEYS.SUBS_PREFIX + email, []);
   return { ok: true };
 }
@@ -88,9 +81,11 @@ function adminDeleteUser(email) {
 }
 
 const addUserForm = document.getElementById("addUserForm");
+
 function clearAddUserErrors() {
   ["newUserNameField", "newUserEmailField", "newUserPasswordField"].forEach((id) => document.getElementById(id).classList.remove("error"));
 }
+
 function showAddUserMessage(text, type) {
   const el = document.getElementById("addUserMsg");
   el.textContent = text;
@@ -98,7 +93,7 @@ function showAddUserMessage(text, type) {
 }
 
 addUserForm.addEventListener("submit", function (e) {
-  e.preventDefault();
+  e.preventDefault();  // Prevent page from refreshing
   clearAddUserErrors();
 
   const name = document.getElementById("newUserName").value.trim();
@@ -115,9 +110,9 @@ addUserForm.addEventListener("submit", function (e) {
   }
 
   showAddUserMessage(`${name} added.`, "success");
-  addUserForm.reset();
-  showToast(`${name} added as a user.`, "success");
-  renderAll();
+  addUserForm.reset();  // Clear form
+  showToast(`${name} added as a user.`, "success");   // Show success notification
+  renderAll();    // Refresh dashboard
 });
 
 document.getElementById("cancelDeleteUserBtn").addEventListener("click", () => {
@@ -141,17 +136,15 @@ function askDeleteUser(email, name) {
   document.getElementById("deleteUserModal").classList.add("show");
 }
 
-// ---- Gather every regular user's subscriptions into one place ----
+
 function buildUserSummaries() {
   const users = getAllUsers().filter((u) => u.role === "user");
 
-  // .map() turns each user into a summary object with totals attached
   return users.map((user) => {
     const subs = readJSON(STORAGE_KEYS.SUBS_PREFIX + user.email, []);
     const monthly = subs.reduce((sum, s) => sum + toMonthly(s.cost, s.billingCycle), 0);
     const annual = subs.reduce((sum, s) => sum + toAnnual(s.cost, s.billingCycle), 0);
 
-    // group by category to find this user's overlaps
     const grouped = subs.reduce((groups, s) => {
       const key = s.category || "Other";
       (groups[key] = groups[key] || []).push(s);
@@ -169,8 +162,7 @@ function buildUserSummaries() {
   });
 }
 
-// Same "roll forward to next occurrence" logic as the user dashboard,
-// reimplemented locally since admin.js doesn't load app.js.
+
 function nextRenewalDate(sub) {
   if (!sub.renewalDate) return null;
   const date = new Date(sub.renewalDate + "T00:00:00");
@@ -186,6 +178,7 @@ function nextRenewalDate(sub) {
   }
   return date;
 }
+
 
 function renderAll() {
   const summaries = buildUserSummaries();
@@ -208,10 +201,11 @@ function renderStats(summaries) {
   document.getElementById("statLeak").textContent = formatCurrency(totalLeakAnnual);
 }
 
+
 function renderChart(summaries) {
   const area = document.getElementById("chartArea");
-  // Merge every user's category totals into one combined object
   const combined = {};
+
   summaries.forEach((u) => {
     Object.keys(u.categoryTotals).forEach((category) => {
       const monthlyForCat = totalMonthlyOf(u.categoryTotals[category]);
@@ -323,7 +317,7 @@ function renderUsersTable(summaries) {
 
 document.getElementById("userSearch").addEventListener("input", () => renderUsersTable(buildUserSummaries()));
 
-// ---- Platform insights: extra info only admins get to see ----
+
 function renderInsights(summaries) {
   const area = document.getElementById("insightsArea");
   const allSubs = summaries.flatMap((u) => u.subs);
@@ -333,7 +327,6 @@ function renderInsights(summaries) {
     return;
   }
 
-  // Top category platform-wide, by combined monthly spend
   const categoryTotals = {};
   allSubs.forEach((s) => {
     const key = s.category || "Other";
@@ -341,7 +334,6 @@ function renderInsights(summaries) {
   });
   const topCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0];
 
-  // Most common payment method across every tracked subscription
   const paymentCounts = {};
   allSubs.forEach((s) => {
     if (!s.paymentMethod) return;
@@ -349,7 +341,6 @@ function renderInsights(summaries) {
   });
   const topPayment = Object.entries(paymentCounts).sort((a, b) => b[1] - a[1])[0];
 
-  // Renewals landing within the next 7 days, across every account
   const renewingSoon = allSubs.filter((s) => {
     const next = nextRenewalDate(s);
     if (!next) return false;
@@ -384,8 +375,9 @@ const PAYMENT_ICON_ADMIN = {
   Other: "💰",
 };
 
-// ---- Per-user drill-down modal ----
+
 function openUserDetail(email) {
+
   const u = buildUserSummaries().find((s) => s.email === email);
   if (!u) return;
 
@@ -396,6 +388,7 @@ function openUserDetail(email) {
   if (u.subs.length === 0) {
     area.innerHTML = `<div class="empty-state"><h4>No subscriptions</h4><p>This user hasn't tracked anything yet.</p></div>`;
   } else {
+
     area.innerHTML = u.subs
       .map((s) => {
         const next = nextRenewalDate(s);
@@ -412,12 +405,11 @@ function openUserDetail(email) {
   }
   document.getElementById("userDetailModal").classList.add("show");
 }
-
 document.getElementById("closeUserDetailBtn").addEventListener("click", () => {
   document.getElementById("userDetailModal").classList.remove("show");
 });
 
-// ---- Boot ----
+
 initHeader();
 initPreferenceControls();
 renderAll();

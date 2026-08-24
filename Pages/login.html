@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Log in — Cove</title>
-<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="../Styles/login.css" />
 </head>
 <body>
 
@@ -27,7 +27,6 @@
         <button type="button" id="tabSignup">Sign up</button>
       </div>
 
-      <!-- LOGIN FORM -->
       <form id="loginForm" class="auth-form active" novalidate>
         <h1>Welcome back</h1>
         <p class="sub">Log in to see today's leak report.</p>
@@ -49,7 +48,6 @@
         <p class="auth-foot">Looking for the admin panel? <a href="admin-login.html">Admin login →</a></p>
       </form>
 
-      <!-- SIGNUP FORM -->
       <form id="signupForm" class="auth-form" novalidate>
         <h1>Create your account</h1>
         <p class="sub">Free forever. Takes under a minute.</p>
@@ -77,10 +75,10 @@
   </main>
 </div>
 
-<script src="utils.js"></script>
-<script src="auth.js"></script>
+<script src="../JS_Files/utils.js"></script>
+<script src="../JS_Files/auth.js"></script>
 <script>
-  // ---- Tab switching between Login and Signup ----
+
   const tabLogin = document.getElementById("tabLogin");
   const tabSignup = document.getElementById("tabSignup");
   const loginForm = document.getElementById("loginForm");
@@ -106,16 +104,13 @@
     showLogin();
   });
 
-  // If someone arrives via a #signup link from the landing page, open that tab
   if (window.location.hash === "#signup") showSignup();
 
-  // If already logged in as a user, skip straight to the dashboard
   const existingSession = getSession();
   if (existingSession && existingSession.role === "user") {
     window.location.href = "dashboard.html";
   }
 
-  // ---- Helpers for showing/clearing field errors ----
   function setFieldError(fieldId, hasError) {
     document.getElementById(fieldId).classList.toggle("error", hasError);
   }
@@ -125,7 +120,6 @@
     el.className = `form-msg show ${type}`;
   }
 
-  // ---- LOGIN submit ----
   loginForm.addEventListener("submit", function (e) {
     e.preventDefault();
     const email = document.getElementById("loginEmail").value.trim();
@@ -147,8 +141,7 @@
     }
   });
 
-  // ---- SIGNUP submit ----
-  signupForm.addEventListener("submit", function (e) {
+    signupForm.addEventListener("submit", function (e) {
     e.preventDefault();
     const name = document.getElementById("signupName").value.trim();
     const email = document.getElementById("signupEmail").value.trim();
