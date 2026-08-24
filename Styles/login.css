@@ -1,33 +1,25 @@
-/* ============================================================
-   COVE — Subscription Overlap & Cost Leak Detector
-   Design language: a tidal cove. Money that isn't watched
-   "leaks" like water — so the visual system borrows from tide,
-   reef and driftwood: deep teal-ink sidebar, warm sand content,
-   coral for alerts, a live "leak tide" gauge as the signature
-   element.
-   ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root{
-  /* --- color tokens --- */
-  --ink:        #14262A;   /* deep teal-black — sidebar, headings */
-  --ink-soft:   #4B5D5C;   /* secondary text on cream */
-  --cream:      #FAF5EA;   /* page background */
-  --sand:       #F0E6D2;   /* card alt / borders */
-  --paper:      #FFFDF9;   /* card background */
-  --teal:       #1F6F6B;   /* links, "healthy" state */
+  
+  --ink:        #14262A;   
+  --ink-soft:   #4B5D5C;  
+  --cream:      #FAF5EA;   
+  --sand:       #F0E6D2;   
+  --paper:      #FFFDF9;   
+  --teal:       #1F6F6B;   
   --teal-deep:  #123B3A;
-  --coral:      #E8573D;   /* primary accent / CTA */
+  --coral:      #E8573D;   
   --coral-deep: #C4432B;
-  --leak:       #D64545;   /* leak / overlap warning */
-  --good:       #2F9E6E;   /* savings / safe */
-  --gold:       #C9922B;   /* neutral highlight */
+  --leak:       #D64545;  
+  --good:       #2F9E6E;   
+  --gold:       #C9922B;   
   --line:       rgba(20,38,42,0.10);
   --shadow:     0 10px 30px rgba(20,38,42,0.10);
   --shadow-sm:  0 4px 14px rgba(20,38,42,0.08);
-  --ink-solid:  #14262A;   /* fixed dark-navy surface — sidebar/hero stay this in both themes */
-  --surface-2:  #ffffff;   /* hardcoded-white surfaces (inputs, chips, modals) */
+  --ink-solid:  #14262A;   
+  --surface-2:  #ffffff;   
 
   /* --- type --- */
   --font-display: 'Fraunces', Georgia, serif;

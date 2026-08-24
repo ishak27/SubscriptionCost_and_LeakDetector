@@ -4,6 +4,8 @@ function seedDemoData() {
   const existingUsers = readJSON(STORAGE_KEYS.USERS, null);
   if (existingUsers) return; 
 
+  
+
   const demoUsers = [
     { name: "Demo User", email: "user@demo.com", password: "user123", role: "user" },
     { name: "Admin", email: "admin@demo.com", password: "admin123", role: "admin" },
@@ -24,6 +26,7 @@ function seedDemoData() {
   writeJSON(STORAGE_KEYS.SUBS_PREFIX + "user@demo.com", demoSubs);
   writeJSON(STORAGE_KEYS.BUDGET_PREFIX + "user@demo.com", 3200);
 
+  
   
   writeJSON(STORAGE_KEYS.SUBS_PREFIX + "priya@demo.com", [
     { id: makeId(), name: "YouTube Premium", category: "Video", cost: 149, billingCycle: "monthly", renewalDate: "2026-08-25", paymentMethod: "PhonePe", cardLast4: "", createdAt: new Date().toISOString() },

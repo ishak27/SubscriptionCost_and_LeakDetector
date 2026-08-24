@@ -410,6 +410,7 @@ document.getElementById("closeUserDetailBtn").addEventListener("click", () => {
 });
 
 
+
 initHeader();
 initPreferenceControls();
 renderAll();
