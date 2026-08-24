@@ -1,0 +1,28 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/Pages/index.html"
+    },
+    {
+      "source": "/index.html",
+      "destination": "/Pages/index.html"
+    },
+    {
+      "source": "/login.html",
+      "destination": "/Pages/login.html"
+    },
+    {
+      "source": "/dashboard.html",
+      "destination": "/Pages/dashboard.html"
+    },
+    {
+      "source": "/admin-login.html",
+      "destination": "/Pages/admin-login.html"
+    },
+    {
+      "source": "/admin-dashboard.html",
+      "destination": "/Pages/admin-dashboard.html"
+    }
+  ]
+}
