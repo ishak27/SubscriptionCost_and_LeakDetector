@@ -53,31 +53,19 @@ function initPreferenceControls() {
 }
 
 
-let pendingDeleteUserEmail = null;
+let pendingDeleteUserId = null;
 
-function adminAddUser({ name, email, password }) {
-  if (!name || !email || !password) return { ok: false, message: "Please fill in every field." };
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailPattern.test(email)) return { ok: false, message: "That email address doesn't look right." };
-  if (password.length < 4) return { ok: false, message: "Password should be at least 4 characters." };
-
-  const users = getAllUsers();
-  if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
-    return { ok: false, message: "An account with that email already exists." };
+async function adminAddUser({ name, email, password }) {
+  try {
+    await apiRequest('/admin/users', { method: 'POST', body: JSON.stringify({ name, email, password }) });
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: error.message };
   }
-
-  users.push({ name, email, password, role: "user" });
-  saveAllUsers(users);
-
-  writeJSON(STORAGE_KEYS.SUBS_PREFIX + email, []);
-  return { ok: true };
 }
 
-function adminDeleteUser(email) {
-  const users = getAllUsers().filter((u) => u.email !== email);
-  saveAllUsers(users);
-  localStorage.removeItem(STORAGE_KEYS.SUBS_PREFIX + email);
-  localStorage.removeItem(STORAGE_KEYS.BUDGET_PREFIX + email);
+async function adminDeleteUser(id) {
+  await apiRequest(`/admin/users/${id}`, { method: 'DELETE' });
 }
 
 const addUserForm = document.getElementById("addUserForm");
@@ -92,7 +80,7 @@ function showAddUserMessage(text, type) {
   el.className = `form-msg show ${type}`;
 }
 
-addUserForm.addEventListener("submit", function (e) {
+addUserForm.addEventListener("submit", async function (e) {
   e.preventDefault();  // Prevent page from refreshing
   clearAddUserErrors();
 
@@ -100,11 +88,11 @@ addUserForm.addEventListener("submit", function (e) {
   const email = document.getElementById("newUserEmail").value.trim();
   const password = document.getElementById("newUserPassword").value;
 
-  const result = adminAddUser({ name, email, password });
+  const result = await adminAddUser({ name, email, password });
   if (!result.ok) {
     if (!name) document.getElementById("newUserNameField").classList.add("error");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) document.getElementById("newUserEmailField").classList.add("error");
-    if (password.length < 4) document.getElementById("newUserPasswordField").classList.add("error");
+    if (password.length < 6) document.getElementById("newUserPasswordField").classList.add("error");
     showAddUserMessage(result.message, "error");
     return;
   }
@@ -112,56 +100,50 @@ addUserForm.addEventListener("submit", function (e) {
   showAddUserMessage(`${name} added.`, "success");
   addUserForm.reset();  // Clear form
   showToast(`${name} added as a user.`, "success");   // Show success notification
-  renderAll();    // Refresh dashboard
+  await loadAdminSummaries();
 });
 
 document.getElementById("cancelDeleteUserBtn").addEventListener("click", () => {
-  pendingDeleteUserEmail = null;
+  pendingDeleteUserId = null;
   document.getElementById("deleteUserModal").classList.remove("show");
 });
 
-document.getElementById("confirmDeleteUserBtn").addEventListener("click", () => {
-  if (!pendingDeleteUserEmail) return;
-  adminDeleteUser(pendingDeleteUserEmail);
-  showToast("User removed.", "success");
-  pendingDeleteUserEmail = null;
-  document.getElementById("deleteUserModal").classList.remove("show");
-  renderAll();
+document.getElementById("confirmDeleteUserBtn").addEventListener("click", async () => {
+  if (!pendingDeleteUserId) return;
+  try {
+    await adminDeleteUser(pendingDeleteUserId);
+    showToast("User and their data removed.", "success");
+    pendingDeleteUserId = null;
+    document.getElementById("deleteUserModal").classList.remove("show");
+    await loadAdminSummaries();
+  } catch (error) {
+    showToast(error.message, "error");
+  }
 });
 
-function askDeleteUser(email, name) {
-  pendingDeleteUserEmail = email;
+function askDeleteUser(id, email, name) {
+  pendingDeleteUserId = id;
   document.getElementById("deleteUserModalText").textContent =
     `Remove "${name}" (${email})? This deletes their account and every subscription they've tracked. This can't be undone.`;
   document.getElementById("deleteUserModal").classList.add("show");
 }
 
 
+let cachedSummaries = [];
+
 function buildUserSummaries() {
-  const users = getAllUsers().filter((u) => u.role === "user");
-
-  return users.map((user) => {
-    const subs = readJSON(STORAGE_KEYS.SUBS_PREFIX + user.email, []);
-    const monthly = subs.reduce((sum, s) => sum + toMonthly(s.cost, s.billingCycle), 0);
-    const annual = subs.reduce((sum, s) => sum + toAnnual(s.cost, s.billingCycle), 0);
-
-    const grouped = subs.reduce((groups, s) => {
-      const key = s.category || "Other";
-      (groups[key] = groups[key] || []).push(s);
-      return groups;
-    }, {});
-    let leakMonthly = 0;
-    for (const category in grouped) {
-      const list = grouped[category];
-      if (list.length < 2) continue;
-      const sorted = [...list].sort((a, b) => toMonthly(a.cost, a.billingCycle) - toMonthly(b.cost, b.billingCycle));
-      leakMonthly += sorted.slice(1).reduce((sum, s) => sum + toMonthly(s.cost, s.billingCycle), 0);
-    }
-
-    return { ...user, subs, monthly, annual, leakMonthly, leakAnnual: leakMonthly * 12, categoryTotals: grouped };
-  });
+  return cachedSummaries;
 }
 
+async function loadAdminSummaries() {
+  try {
+    const result = await apiRequest('/admin/overview');
+    cachedSummaries = result.summaries || [];
+    renderAll();
+  } catch (error) {
+    showToast(error.message, 'error');
+  }
+}
 
 function nextRenewalDate(sub) {
   if (!sub.renewalDate) return null;
@@ -299,7 +281,7 @@ function renderUsersTable(summaries) {
         <button class="btn-icon" title="View subscriptions" data-view-user="${u.email}">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
-        <button class="btn-icon danger" title="Remove user" data-delete-user="${u.email}" data-user-name="${u.name}">
+        <button class="btn-icon danger" title="Remove user" data-delete-user="${u.id}" data-user-email="${u.email}" data-user-name="${u.name}">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16z"/></svg>
         </button>
       </td>
@@ -308,7 +290,7 @@ function renderUsersTable(summaries) {
     .join("");
 
   tbody.querySelectorAll("[data-delete-user]").forEach((btn) =>
-    btn.addEventListener("click", () => askDeleteUser(btn.dataset.deleteUser, btn.dataset.userName))
+    btn.addEventListener("click", () => askDeleteUser(btn.dataset.deleteUser, btn.dataset.userEmail, btn.dataset.userName))
   );
   tbody.querySelectorAll("[data-view-user]").forEach((btn) =>
     btn.addEventListener("click", () => openUserDetail(btn.dataset.viewUser))
@@ -413,4 +395,11 @@ document.getElementById("closeUserDetailBtn").addEventListener("click", () => {
 
 initHeader();
 initPreferenceControls();
-renderAll();
+verifySession().then((user) => {
+  if (!user || user.role !== 'admin') {
+    clearSession();
+    window.location.href = 'admin-login.html';
+    return;
+  }
+  loadAdminSummaries();
+});

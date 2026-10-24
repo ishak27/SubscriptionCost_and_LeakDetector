@@ -670,3 +670,26 @@ table.data-table tbody tr:hover{ background: var(--sand); }
   border: 4px solid var(--sand); border-top-color: var(--coral); animation: spin .8s linear infinite;
 }
 @keyframes spin{ to{ transform: rotate(360deg); } }
+
+/* Cove feature additions: reuse the existing theme tokens and card language. */
+.spending-insights-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.insight-tile{background:var(--sand);border:1px solid var(--line);border-radius:var(--radius-sm);padding:16px;min-width:0}
+.insight-label,.savings-result .lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700}
+.insight-value{font-family:var(--font-display);font-size:21px;font-weight:600;margin:7px 0;overflow-wrap:anywhere}
+.insight-detail{font-size:12.5px;color:var(--ink-soft);line-height:1.5}
+.insight-warning{border-color:rgba(214,69,69,.35)}
+.insight-warning .insight-value{color:var(--leak)}
+.insight-caution{border-color:rgba(201,146,43,.4)}
+.savings-calculator{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(220px,1fr);gap:20px;align-items:start}
+.savings-selection-list{display:flex;flex-direction:column;gap:8px}
+.savings-select-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius-sm);cursor:pointer;min-width:0}
+.savings-select-row input{accent-color:var(--coral);width:16px;height:16px;flex:0 0 auto}
+.savings-select-name{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.savings-select-name strong{overflow-wrap:anywhere}
+.savings-select-name small{font-size:12px;color:var(--ink-soft)}
+.savings-select-cost{font-size:13px;font-weight:700;white-space:nowrap}
+.savings-result{background:var(--sand);border-radius:var(--radius-sm);padding:16px;display:flex;flex-direction:column;gap:16px}
+.savings-result .val{font-family:var(--font-display);font-size:24px;font-weight:600;margin-top:5px}
+.savings-note{grid-column:1/-1;font-size:12px;color:var(--ink-soft);line-height:1.5;margin:0}
+.renewal-reminder-item{background:transparent;border-color:var(--line)}
+@media(max-width:800px){.spending-insights-grid{grid-template-columns:1fr}.savings-calculator{grid-template-columns:1fr}.savings-note{grid-column:auto}}

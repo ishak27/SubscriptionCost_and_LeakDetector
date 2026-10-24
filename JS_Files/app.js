@@ -4,24 +4,26 @@ const session = requireRole("user");
 let subscriptions = [];
 let editingId = null; 
 let pendingDeleteId = null;
+let monthlyBudget = 0;
 
 const storageKey = STORAGE_KEYS.SUBS_PREFIX + session.email;
 const budgetKey = STORAGE_KEYS.BUDGET_PREFIX + session.email;
 
-function loadSubscriptions() {
-  subscriptions = readJSON(storageKey, []);
-}
-
-function saveSubscriptions() {
-  writeJSON(storageKey, subscriptions);
+async function loadSubscriptions() {
+  const result = await apiRequest('/subscriptions');
+  subscriptions = result.subscriptions || [];
 }
 
 function loadBudget() {
-  return Number(readJSON(budgetKey, 0)) || 0;
+  return monthlyBudget;
 }
 
-function saveBudget(amount) {
-  writeJSON(budgetKey, amount);
+async function saveBudget(amount) {
+  const result = await apiRequest('/budget', {
+    method: 'PUT',
+    body: JSON.stringify({ monthlyBudget: amount, currency: getCurrency() })
+  });
+  monthlyBudget = result.budget.monthlyBudget;
 }
 
 function initPreferenceControls() {
@@ -205,8 +207,12 @@ function renderAll() {
   renderReportTable();
   renderBudget();
   renderBudgetCategory();
+  renderSpendingInsights();
+  renderSavingsCalculator();
+  renderRenewalsNext7();
   renderCalendar();
   renderUpcomingRenewals();
+  renderAllUpcomingRenewals();
 }
 
 function renderStats() {
@@ -281,6 +287,74 @@ function renderOverlapDetail() {
     return;
   }
   area.innerHTML = overlaps.map(overlapItemHtml).join("");
+}
+
+function renderSavingsCalculator() {
+  const area = document.getElementById("savingsCalculatorArea");
+  if (!area) return;
+  if (subscriptions.length === 0) {
+    area.innerHTML = emptyStateHtml("Nothing to calculate yet", "Add subscriptions to estimate potential savings.");
+    return;
+  }
+  area.innerHTML = `
+    <div class="savings-calculator">
+      <div class="savings-selection-list">
+        ${subscriptions.map((sub) => `
+          <label class="savings-select-row">
+            <input type="checkbox" data-savings-id="${sub.id}" />
+            <span class="savings-select-name"><strong>${escapeHtml(sub.name)}</strong><small>${escapeHtml(sub.category)} · ${escapeHtml(sub.billingCycle)}</small></span>
+            <span class="savings-select-cost">${formatCurrency(toMonthly(sub.cost, sub.billingCycle))}/mo</span>
+          </label>`).join("")}
+      </div>
+      <div class="savings-result" aria-live="polite">
+        <div><span class="lbl">Potential monthly savings</span><div class="val" id="potentialMonthlySavings">${formatCurrency(0)}</div></div>
+        <div><span class="lbl">Potential yearly savings</span><div class="val" id="potentialAnnualSavings">${formatCurrency(0)}</div></div>
+        <button type="button" class="btn btn-ghost btn-sm" id="clearSavingsSelection">Clear selection</button>
+      </div>
+      <p class="savings-note">Estimates use monthly-equivalent subscription costs. Selecting an item only calculates savings; it does not cancel or modify your subscription.</p>
+    </div>`;
+  const updateSavings = () => {
+    const selectedIds = new Set([...area.querySelectorAll('[data-savings-id]:checked')].map((input) => input.dataset.savingsId));
+    const monthly = subscriptions.filter((sub) => selectedIds.has(String(sub.id))).reduce((sum, sub) => sum + toMonthly(sub.cost, sub.billingCycle), 0);
+    document.getElementById("potentialMonthlySavings").textContent = formatCurrency(monthly);
+    document.getElementById("potentialAnnualSavings").textContent = formatCurrency(monthly * 12);
+  };
+  area.querySelectorAll('[data-savings-id]').forEach((input) => input.addEventListener('change', updateSavings));
+  document.getElementById('clearSavingsSelection').addEventListener('click', () => {
+    area.querySelectorAll('[data-savings-id]').forEach((input) => { input.checked = false; });
+    updateSavings();
+  });
+}
+
+function renderSpendingInsights() {
+  const area = document.getElementById('spendingInsightsArea');
+  if (!area) return;
+  const grouped = groupByCategory(subscriptions);
+  const rows = Object.keys(grouped).map((category) => ({ category, amount: totalMonthly(grouped[category]), count: grouped[category].length })).sort((a, b) => b.amount - a.amount);
+  const monthly = totalMonthly(subscriptions);
+  const top = rows[0];
+  const budget = loadBudget();
+  const budgetPct = budget > 0 ? Math.round((monthly / budget) * 100) : null;
+  const budgetText = !budget ? 'Set a monthly budget to unlock budget insights.' : budgetPct >= 100 ? `Over budget by ${formatCurrency(monthly - budget)} per month.` : budgetPct >= 80 ? `${budgetPct}% of your monthly budget is already committed.` : `${formatCurrency(budget - monthly)} remaining in your monthly budget.`;
+  const budgetClass = budget && budgetPct >= 100 ? 'insight-warning' : budget && budgetPct >= 80 ? 'insight-caution' : 'insight-normal';
+  area.innerHTML = `
+    <div class="insight-tile"><div class="insight-label">Highest-spend category</div><div class="insight-value">${top ? escapeHtml(top.category) : '—'}</div><div class="insight-detail">${top ? `${formatCurrency(top.amount)}/mo · ${top.count} subscription${top.count === 1 ? '' : 's'}` : 'Add a subscription to see insights.'}</div></div>
+    <div class="insight-tile ${budgetClass}"><div class="insight-label">Budget status</div><div class="insight-value">${!budget ? 'No budget set' : `${budgetPct}% used`}</div><div class="insight-detail">${budgetText}</div></div>
+    <div class="insight-tile"><div class="insight-label">Potential overlap spend</div><div class="insight-value">${formatCurrency(findOverlaps(subscriptions).reduce((sum, item) => sum + item.leakMonthly, 0))}/mo</div><div class="insight-detail">Estimate assumes keeping the lowest-cost subscription in each shared category.</div></div>`;
+}
+
+function renderRenewalsNext7() {
+  const area = document.getElementById('renewalsNext7Area');
+  if (!area) return;
+  const upcoming = subscriptions.map((sub) => ({ sub, next: getNextRenewal(sub) })).filter(({ next }) => next && daysUntil(next) >= 0 && daysUntil(next) <= 7).sort((a, b) => a.next - b.next);
+  if (!upcoming.length) {
+    area.innerHTML = emptyStateHtml('No renewals in the next 7 days', 'You are all clear for the coming week. Your renewal calendar shows later dates.');
+    return;
+  }
+  area.innerHTML = upcoming.map(({ sub, next }) => {
+    const days = daysUntil(next);
+    return `<div class="overlap-item renewal-reminder-item"><div class="overlap-icon">📅</div><div style="flex:1"><h4>${escapeHtml(sub.name)} · ${next.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</h4><p>${days === 0 ? 'Renews today' : days === 1 ? 'Renews tomorrow' : `Renews in ${days} days`} · ${escapeHtml(sub.category)} · ${formatCurrency(toMonthly(sub.cost, sub.billingCycle))}/mo equivalent</p></div></div>`;
+  }).join('');
 }
 
 function overlapItemHtml(o) {
@@ -474,7 +548,7 @@ function renderBudgetCategory() {
     .join("")}</div>`;
 }
 
-document.getElementById("budgetForm").addEventListener("submit", function (e) {
+document.getElementById("budgetForm").addEventListener("submit", async function (e) {
   e.preventDefault();
   const input = document.getElementById("budgetInput");
   const value = Number(input.value);
@@ -485,11 +559,15 @@ document.getElementById("budgetForm").addEventListener("submit", function (e) {
     return;
   }
 
-  saveBudget(value);
-  document.getElementById("budgetField").classList.remove("error");
-  renderBudget();
-  renderBudgetCategory();
-  showToast("Budget saved.", "success");
+  try {
+    await saveBudget(value);
+    document.getElementById("budgetField").classList.remove("error");
+    renderBudget();
+    renderBudgetCategory();
+    showToast("Budget saved to the database.", "success");
+  } catch (error) {
+    showToast(error.message, "error");
+  }
 });
 
 
@@ -539,35 +617,26 @@ function renderCalendar() {
   grid.innerHTML = cells;
 }
 
-function renderUpcomingRenewals() {
-  const area = document.getElementById("upcomingRenewalsArea");
-  const withDates = subscriptions
-    .map((sub) => ({ sub, next: getNextRenewal(sub) }))
-    .filter((e) => e.next)
+function renderRenewalList(areaId, withinSevenDays) {
+  const area = document.getElementById(areaId);
+  if (!area) return;
+  const withDates = subscriptions.map((sub) => ({ sub, next: getNextRenewal(sub) }))
+    .filter(({ next }) => next && (!withinSevenDays || (daysUntil(next) >= 0 && daysUntil(next) <= 7)))
     .sort((a, b) => a.next - b.next);
-
   if (withDates.length === 0) {
-    area.innerHTML = emptyStateHtml("No renewal dates yet", "Add a renewal date to your subscriptions to see them lined up here.");
+    area.innerHTML = emptyStateHtml(withinSevenDays ? 'No renewals in the next 7 days' : 'No upcoming renewals', withinSevenDays ? 'No payments are due in the coming week.' : 'Add renewal dates to your subscriptions to see them here.');
     return;
   }
-
-  area.innerHTML = withDates
-    .map(({ sub, next }) => {
-      const days = daysUntil(next);
-      const urgency = renewalUrgency(days);
-      const dateLabel = next.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-      const daysLabel = days === 0 ? "Renews today" : days === 1 ? "Renews in 1 day" : `Renews in ${days} days`;
-      return `
-      <div class="overlap-item" style="background:transparent;border-color:var(--line);">
-        <div class="overlap-icon" style="background:${urgency === "red" ? "var(--leak)" : urgency === "yellow" ? "var(--gold)" : "var(--good)"};">${URGENCY_DOT[urgency]}</div>
-        <div style="flex:1;">
-          <h4>${sub.name} — ${dateLabel}</h4>
-          <p>${daysLabel} · ${sub.category} · ${formatCurrency(sub.cost)} / ${sub.billingCycle}</p>
-        </div>
-      </div>`;
-    })
-    .join("");
+  area.innerHTML = withDates.map(({ sub, next }) => {
+    const days = daysUntil(next);
+    const urgency = renewalUrgency(days);
+    const dateLabel = next.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    const daysLabel = days === 0 ? 'Renews today' : days === 1 ? 'Renews tomorrow' : `Renews in ${days} days`;
+    return `<div class="overlap-item" style="background:transparent;border-color:var(--line);"><div class="overlap-icon" style="background:${urgency === 'red' ? 'var(--leak)' : urgency === 'yellow' ? 'var(--gold)' : 'var(--good)'};">${URGENCY_DOT[urgency]}</div><div style="flex:1"><h4>${escapeHtml(sub.name)} — ${dateLabel}</h4><p>${daysLabel} · ${escapeHtml(sub.category)} · ${formatCurrency(sub.cost)} / ${escapeHtml(sub.billingCycle)}</p></div></div>`;
+  }).join('');
 }
+function renderUpcomingRenewals() { renderRenewalList('upcomingRenewalsArea', true); }
+function renderAllUpcomingRenewals() { renderRenewalList('allUpcomingRenewalsArea', false); }
 
 document.getElementById("calPrevBtn").addEventListener("click", () => {
   calendarCursor.setMonth(calendarCursor.getMonth() - 1);
@@ -577,6 +646,10 @@ document.getElementById("calNextBtn").addEventListener("click", () => {
   calendarCursor.setMonth(calendarCursor.getMonth() + 1);
   renderCalendar();
 });
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+}
 
 function emptyStateHtml(title, sub) {
   return `<div class="empty-state">
@@ -667,44 +740,23 @@ subForm.addEventListener("submit", function (e) {
   }
 });
 
-function commitSubscription({ name, category, cost, cycle, renewalDate, paymentMethod, cardLast4 }) {
+async function commitSubscription({ name, category, cost, cycle, renewalDate, paymentMethod, cardLast4 }) {
+  const payload = { name, category, cost: Number(cost), billingCycle: cycle, renewalDate, paymentMethod, cardLast4 };
   try {
     if (editingId) {
-     
-      const target = subscriptions.find((s) => s.id === editingId);
-      if (target) {
-        target.name = name;
-        target.category = category;
-        target.cost = Number(cost);
-        target.billingCycle = cycle;
-        target.renewalDate = renewalDate;
-        target.paymentMethod = paymentMethod;
-        target.cardLast4 = cardLast4;
-      }
-      showToast(`${name} updated.`, "success");
+      const result = await apiRequest(`/subscriptions/${editingId}`, { method: 'PUT', body: JSON.stringify(payload) });
+      subscriptions = subscriptions.map((item) => item.id === editingId ? result.subscription : item);
+      showToast(`${name} updated in the database.`, 'success');
     } else {
-     
-      subscriptions.push({
-        id: makeId(),
-        name,
-        category,
-        cost: Number(cost),
-        billingCycle: cycle,
-        renewalDate,
-        paymentMethod,
-        cardLast4,
-        createdAt: new Date().toISOString(),
-      });
-      showToast(`${name} added.`, "success");
+      const result = await apiRequest('/subscriptions', { method: 'POST', body: JSON.stringify(payload) });
+      subscriptions.push(result.subscription);
+      showToast(`${name} saved to the database.`, 'success');
     }
-
-    saveSubscriptions();
     resetForm();
     renderAll();
   } catch (err) {
-   
     console.error(err);
-    showToast("Something went wrong saving that subscription.", "error");
+    showToast(err.message || 'Could not save subscription.', 'error');
   }
 }
 
@@ -821,17 +873,21 @@ document.getElementById("cancelDeleteBtn").addEventListener("click", () => {
   document.getElementById("deleteModal").classList.remove("show");
 });
 
-document.getElementById("confirmDeleteBtn").addEventListener("click", () => {
+document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
   if (!pendingDeleteId) return;
   const removed = subscriptions.find((s) => s.id === pendingDeleteId);
  
-  subscriptions = subscriptions.filter((s) => s.id !== pendingDeleteId);
-  saveSubscriptions();
-  if (editingId === pendingDeleteId) resetForm();
-  pendingDeleteId = null;
-  document.getElementById("deleteModal").classList.remove("show");
-  renderAll();
-  showToast(`${removed ? removed.name : "Subscription"} removed.`, "success");
+  try {
+    await apiRequest(`/subscriptions/${pendingDeleteId}`, { method: 'DELETE' });
+    subscriptions = subscriptions.filter((s) => s.id !== pendingDeleteId);
+    if (editingId === pendingDeleteId) resetForm();
+    pendingDeleteId = null;
+    document.getElementById("deleteModal").classList.remove("show");
+    renderAll();
+    showToast(`${removed ? removed.name : "Subscription"} deleted from the database.`, "success");
+  } catch (error) {
+    showToast(error.message, 'error');
+  }
 });
 
 
@@ -839,7 +895,18 @@ document.getElementById("searchInput").addEventListener("input", renderSubList);
 document.getElementById("categoryFilter").addEventListener("change", renderSubList);
 
 
-loadSubscriptions();
-initHeader();
-initPreferenceControls();
-renderAll();
+async function initializeDashboard() {
+  initHeader();
+  initPreferenceControls();
+  try {
+    const results = await Promise.all([loadSubscriptions(), apiRequest('/budget')]);
+    monthlyBudget = results[1].budget ? results[1].budget.monthlyBudget : 0;
+    renderAll();
+  } catch (error) {
+    subscriptions = [];
+    monthlyBudget = 0;
+    renderAll();
+    showToast(error.message, 'error');
+  }
+}
+initializeDashboard();

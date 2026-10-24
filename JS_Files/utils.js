@@ -130,3 +130,31 @@ function waveSvg(extraClass = "") {
     <path d="M0 10 Q 12.5 0 25 10 T 50 10 T 75 10 T 100 10 T 125 10 T 150 10 T 175 10 T 200 10 V20 H0 Z"></path>
   </svg>`;
 }
+
+
+// API helper shared by the existing frontend pages.
+const API_BASE_URL = window.COVE_API_BASE_URL || 'http://localhost:5000/api';
+const TOKEN_KEY = 'cove_auth_token';
+
+async function apiRequest(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+  } catch (_error) {
+    throw new Error('Cannot reach the Cove API. Start the backend with npm run dev and open the site through http://localhost:5000.');
+  }
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    if (response.status === 401) {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(STORAGE_KEYS.SESSION);
+    }
+    throw new Error(data.message || `Request failed (${response.status}).`);
+  }
+  return data;
+}

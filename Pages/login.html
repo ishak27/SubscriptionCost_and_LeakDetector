@@ -66,7 +66,7 @@
         <div class="field" id="signupPasswordField">
           <label for="signupPassword">Password</label>
           <input type="password" id="signupPassword" placeholder="At least 4 characters" autocomplete="new-password" />
-          <div class="error-msg">Password should be at least 4 characters.</div>
+          <div class="error-msg">Password should be at least 6 characters.</div>
         </div>
         <button type="submit" class="btn btn-primary" style="width:100%;">Create account</button>
         <p class="auth-foot">Already have an account? <a href="#" id="switchToLogin">Log in →</a></p>
@@ -107,8 +107,8 @@
   if (window.location.hash === "#signup") showSignup();
 
   const existingSession = getSession();
-  if (existingSession && existingSession.role === "user") {
-    window.location.href = "dashboard.html";
+  if (existingSession && existingSession.role === "user" && localStorage.getItem(TOKEN_KEY)) {
+    verifySession().then(user => { if (user && user.role === "user") window.location.href = "dashboard.html"; });
   }
 
   function setFieldError(fieldId, hasError) {
@@ -120,7 +120,7 @@
     el.className = `form-msg show ${type}`;
   }
 
-  loginForm.addEventListener("submit", function (e) {
+  loginForm.addEventListener("submit", async function (e) {
     e.preventDefault();
     const email = document.getElementById("loginEmail").value.trim();
     const password = document.getElementById("loginPassword").value;
@@ -132,7 +132,7 @@
       return;
     }
 
-    const result = loginUser(email, password, "user");
+    const result = await loginUser(email, password, "user");
     if (result.ok) {
       showFormMessage("loginMsg", "Welcome back! Redirecting…", "success");
       setTimeout(() => (window.location.href = "dashboard.html"), 500);
@@ -141,7 +141,7 @@
     }
   });
 
-    signupForm.addEventListener("submit", function (e) {
+    signupForm.addEventListener("submit", async function (e) {
     e.preventDefault();
     const name = document.getElementById("signupName").value.trim();
     const email = document.getElementById("signupEmail").value.trim();
@@ -149,9 +149,9 @@
 
     setFieldError("signupNameField", !name);
     setFieldError("signupEmailField", !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
-    setFieldError("signupPasswordField", password.length < 4);
+    setFieldError("signupPasswordField", password.length < 6);
 
-    const result = signupUser({ name, email, password });
+    const result = await signupUser({ name, email, password });
     if (result.ok) {
       showFormMessage("signupMsg", "Account created! Redirecting…", "success");
       setTimeout(() => (window.location.href = "dashboard.html"), 500);

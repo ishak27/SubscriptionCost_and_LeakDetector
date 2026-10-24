@@ -147,6 +147,14 @@
         </div>
         <div id="quickOverlaps"></div>
       </div>
+
+      <div class="card panel rise-in" style="animation-delay:.18s">
+        <div class="panel-head">
+          <div><h3>Renewing in the next 7 days</h3><p>Upcoming payments based on your renewal dates</p></div>
+          <button class="btn btn-ghost btn-sm" data-goto="calendar">Open calendar →</button>
+        </div>
+        <div id="renewalsNext7Area"></div>
+      </div>
     </section>
 
 
@@ -262,6 +270,10 @@
       <div class="card panel">
         <div id="overlapDetailArea"></div>
       </div>
+      <div class="card panel">
+        <div class="panel-head"><div><h3>Savings calculator</h3><p>Select subscriptions you would consider cancelling to estimate potential savings. This does not cancel anything.</p></div></div>
+        <div id="savingsCalculatorArea"></div>
+      </div>
     </section>
     
 
@@ -271,6 +283,10 @@
           <h1>Reports</h1>
           <div class="date">Full category breakdown &amp; totals</div>
         </div>
+      </div>
+      <div class="card panel">
+        <div class="panel-head"><div><h3>Spending insights</h3><p>Highlights calculated from your saved subscriptions and budget</p></div></div>
+        <div id="spendingInsightsArea" class="spending-insights-grid"></div>
       </div>
       <div class="card panel">
         <div class="panel-head"><div><h3>Category breakdown</h3><p>Monthly + annual totals per category</p></div></div>
@@ -348,8 +364,12 @@
       </div>
 
       <div class="card panel">
-        <div class="panel-head"><div><h3>Next renewals</h3><p>Sorted soonest-first, across every category</p></div></div>
+        <div class="panel-head"><div><h3>Renewing in the next 7 days</h3><p>Near-term reminders, sorted by renewal date</p></div></div>
         <div id="upcomingRenewalsArea"></div>
+      </div>
+      <div class="card panel">
+        <div class="panel-head"><div><h3>All upcoming renewals</h3><p>Every upcoming renewal, sorted soonest-first</p></div></div>
+        <div id="allUpcomingRenewalsArea"></div>
       </div>
     </section>
 
