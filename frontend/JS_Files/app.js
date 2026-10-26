@@ -99,31 +99,7 @@ function groupByCategory(list) {
 
 
 function findOverlaps(list) {
-  const grouped = groupByCategory(list);
-  const overlaps = [];
-
- 
-  for (const [category, subs] of Object.entries(grouped)) {
-    if (subs.length < 2) continue; // not an overlap
-
-
-    const sorted = [...subs].sort((a, b) => toMonthly(a.cost, a.billingCycle) - toMonthly(b.cost, b.billingCycle));
-    const keep = sorted[0];
-    const leaking = sorted.slice(1); // everything except the cheapest
-
-    const leakMonthly = leaking.reduce((sum, s) => sum + toMonthly(s.cost, s.billingCycle), 0);
-    overlaps.push({
-      category,
-      subs: sorted,
-      keep,
-      leaking,
-      leakMonthly,
-      leakAnnual: leakMonthly * 12,
-    });
-  }
-
-  overlaps.sort((a, b) => b.leakMonthly - a.leakMonthly);
-  return overlaps;
+  return window.CoveOverlapDetector.detect(list);
 }
 
 function totalMonthly(list) {
@@ -135,22 +111,8 @@ function totalAnnual(list) {
 
 
 function getNextRenewal(sub) {
-  if (!sub.renewalDate) return null;
-  const date = new Date(sub.renewalDate + "T00:00:00");
-  if (isNaN(date.getTime())) return null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  let guard = 0; 
-  while (date < today && guard < 1000) {
-    if (sub.billingCycle === "weekly") date.setDate(date.getDate() + 7);
-    else if (sub.billingCycle === "yearly") date.setFullYear(date.getFullYear() + 1);
-    else date.setMonth(date.getMonth() + 1); // monthly (default)
-    guard++;
-  }
-  return date;
+  return window.CoveRenewalReminders.nextDate(sub);
 }
-
 
 function daysUntil(date) {
   const today = new Date();
@@ -314,10 +276,10 @@ function renderSavingsCalculator() {
       <p class="savings-note">Estimates use monthly-equivalent subscription costs. Selecting an item only calculates savings; it does not cancel or modify your subscription.</p>
     </div>`;
   const updateSavings = () => {
-    const selectedIds = new Set([...area.querySelectorAll('[data-savings-id]:checked')].map((input) => input.dataset.savingsId));
-    const monthly = subscriptions.filter((sub) => selectedIds.has(String(sub.id))).reduce((sum, sub) => sum + toMonthly(sub.cost, sub.billingCycle), 0);
-    document.getElementById("potentialMonthlySavings").textContent = formatCurrency(monthly);
-    document.getElementById("potentialAnnualSavings").textContent = formatCurrency(monthly * 12);
+    const selectedIds = [...area.querySelectorAll('[data-savings-id]:checked')].map((input) => input.dataset.savingsId);
+    const savings = window.CoveSavingsCalculator.calculate(subscriptions, selectedIds);
+    document.getElementById("potentialMonthlySavings").textContent = formatCurrency(savings.monthly);
+    document.getElementById("potentialAnnualSavings").textContent = formatCurrency(savings.annual);
   };
   area.querySelectorAll('[data-savings-id]').forEach((input) => input.addEventListener('change', updateSavings));
   document.getElementById('clearSavingsSelection').addEventListener('click', () => {
@@ -329,12 +291,12 @@ function renderSavingsCalculator() {
 function renderSpendingInsights() {
   const area = document.getElementById('spendingInsightsArea');
   if (!area) return;
-  const grouped = groupByCategory(subscriptions);
-  const rows = Object.keys(grouped).map((category) => ({ category, amount: totalMonthly(grouped[category]), count: grouped[category].length })).sort((a, b) => b.amount - a.amount);
-  const monthly = totalMonthly(subscriptions);
+  const insight = window.CoveSpendingInsights.summarize(subscriptions, loadBudget());
+  const rows = insight.rows.map((row) => ({ category: row.category, amount: row.monthly, count: row.count }));
+  const monthly = insight.totalMonthly;
   const top = rows[0];
-  const budget = loadBudget();
-  const budgetPct = budget > 0 ? Math.round((monthly / budget) * 100) : null;
+  const budget = insight.budget;
+  const budgetPct = insight.budgetPercent;
   const budgetText = !budget ? 'Set a monthly budget to unlock budget insights.' : budgetPct >= 100 ? `Over budget by ${formatCurrency(monthly - budget)} per month.` : budgetPct >= 80 ? `${budgetPct}% of your monthly budget is already committed.` : `${formatCurrency(budget - monthly)} remaining in your monthly budget.`;
   const budgetClass = budget && budgetPct >= 100 ? 'insight-warning' : budget && budgetPct >= 80 ? 'insight-caution' : 'insight-normal';
   area.innerHTML = `
