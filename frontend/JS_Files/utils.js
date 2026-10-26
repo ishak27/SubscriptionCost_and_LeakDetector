@@ -133,7 +133,7 @@ function waveSvg(extraClass = "") {
 
 
 // API helper shared by the existing frontend pages.
-const API_BASE_URL = window.COVE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = 'https://cove-backend-fxb0.onrender.com/api';
 const TOKEN_KEY = 'cove_auth_token';
 
 async function apiRequest(path, options = {}) {
