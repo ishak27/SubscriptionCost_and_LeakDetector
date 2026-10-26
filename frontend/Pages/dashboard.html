@@ -424,8 +424,19 @@
   </div>
 </div>
 
+
+<script src="../JS_Files/api-config.js"></script>
 <script src="../JS_Files/utils.js"></script>
 <script src="../JS_Files/auth.js"></script>
+
+<!-- Feature modules must load before app.js -->
+<script src="../JS_Files/overlapDetector.js"></script>
+<script src="../JS_Files/renewalReminders.js"></script>
+<script src="../JS_Files/savingsCalculator.js"></script>
+<script src="../JS_Files/spendingInsights.js"></script>
+
+<!-- Main dashboard script loads last -->
 <script src="../JS_Files/app.js"></script>
 </body>
 </html>
+

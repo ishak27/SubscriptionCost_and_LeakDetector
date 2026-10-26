@@ -19,7 +19,7 @@ function loadBudget() {
 }
 
 async function saveBudget(amount) {
-  const result = await apiRequest('/budget', {
+  const result = await apiRequest('/budgets', {
     method: 'PUT',
     body: JSON.stringify({ monthlyBudget: amount, currency: getCurrency() })
   });
@@ -861,7 +861,7 @@ async function initializeDashboard() {
   initHeader();
   initPreferenceControls();
   try {
-    const results = await Promise.all([loadSubscriptions(), apiRequest('/budget')]);
+    const results = await Promise.all([loadSubscriptions(), apiRequest('/budgets')]);
     monthlyBudget = results[1].budget ? results[1].budget.monthlyBudget : 0;
     renderAll();
   } catch (error) {
