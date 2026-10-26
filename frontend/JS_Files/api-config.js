@@ -5,4 +5,4 @@
  * e.g. https://your-cove-api.example.com/api (no trailing slash).
  * Never put MongoDB credentials or JWT_SECRET in frontend files.
  */
-window.COVE_API_BASE_URL = window.COVE_API_BASE_URL || 'http://localhost:5000/api';
+window.COVE_API_BASE_URL = 'https://cove-backend-fxb0.onrender.com/api';
