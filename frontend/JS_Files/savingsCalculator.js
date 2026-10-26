@@ -12,3 +12,4 @@ window.CoveSavingsCalculator = {
     return { monthly, annual: monthly * 12 };
   }
 };
+
